@@ -7,6 +7,19 @@ in the osvbng tree. Decisions made here bind all three repos: osvbng
 (control plane and orchestration, mostly human-driven), osvbng-vpp
 (dataplane plugins and the VPP build), and this one.
 
+## Where to open the agent, and session config
+
+Open Claude at the root of the main osvbng checkout (the superproject),
+so one session sees the control plane, the vpp/ submodule and this
+context/ submodule together. Run `context/scripts/setup-claude.sh`
+once after cloning: it installs the versioned `.claude/settings.json`
+and a short root `CLAUDE.md` (both gitignored in the superproject, so
+they never spam its history) from `context/claude/`. Session config is
+version-controlled HERE and re-running the installer is how drift gets
+fixed. Submodules check out detached: branch inside the submodule you
+are changing, PR that repo, then bump the pointer in the superproject
+as a separate focused commit.
+
 ## How work flows
 
 - Decisions are ADRs in `decisions/`: numbered, append-only, one file

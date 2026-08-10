@@ -1,0 +1,14 @@
+{
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash(make:*)",
+      "Bash(go:*)",
+      "Bash(git:*)",
+      "Bash(gh pr:*)",
+      "Bash(docker:*)",
+      "Bash(vppctl:*)",
+      "Bash(sudo containerlab:*)"
+    ]
+  }
+}
