@@ -69,6 +69,21 @@ as a separate focused commit.
    subscriber touches), not when it compiles or its unit tests pass.
    Report outcomes exactly: failed means failed, skipped means
    skipped.
+9. **Upstream what belongs to VPP.** A fix or feature that is about
+   VPP itself, not about osvbng, goes to fd.io first; it lives in our
+   patch queue only until it merges upstream, and the patch header
+   records the gerrit link and status. Local-only needs a stated
+   reason. We take from the commons, so we give back to it, and a
+   short queue is a queue that survives version bumps (ADR 0002).
+10. **Plugins serve any control plane, not just osvbng.** A plugin is
+    a general VPP dataplane building block: its .api, node graph and
+    shared-memory protocols are the whole contract, and nothing in a
+    plugin may assume osvbng specifically is the control plane above
+    it. Every plugin carries a capability/version query so any control
+    plane can discover it; osvbng-specific policy lives in the control
+    plane, never baked into the dataplane. This keeps the plugins
+    reusable and forces the clean control/dataplane seam that makes
+    them correct.
 
 ## Writing style (code comments, commits, PRs, docs)
 
