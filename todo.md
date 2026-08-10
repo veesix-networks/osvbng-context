@@ -24,9 +24,14 @@ NEXT UP (in order):
 2. Wire osvbng releases to osvbng-vpp artifacts: binapi generation in
    the pipeline (ADR 0002), osvbng consumes version-stamped bindings
    and debs from one build.
-3. Import the remaining plugin repos into osvbng-vpp with history;
-   archive the originals. Drop fib-control (dead code: wrappers have
-   no callers).
+3. Plugin imports: DONE. Nine plugins in osvbng-vpp with history
+   (punt, pppoe, ipoe, l2gw, srg, tunnel, cgnat, qos_sched, l2tpv2);
+   all compile and load together with zero node-resolution errors.
+   The template repo is the skeleton/coding guide, not a build target
+   (its content fed osvbng-vpp/CLAUDE.md); fib-control not imported
+   (dead code). Remaining human actions: archive the ten original
+   plugin repos on GitHub, and wire osvbng-vpp + osvbng-context as
+   submodules of the main osvbng repo.
 4. ARP and IPv6 ND move from Go into the dataplane: plugin-local
    responders (gateway replies gated on SRG active state), drop
    instead of punt for the rest. Removes the punt-storm surface and
