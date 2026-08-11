@@ -34,6 +34,11 @@ as a separate focused commit.
 - LLM-heavy work (plugins, docs, decisions, tooling) lands in
   osvbng-vpp and this repo. The main osvbng repo receives focused,
   human-reviewed PRs; keep its history quiet.
+- osvbng pins vpp and context at exact commits. After a change merges
+  in either, osvbng still builds the old one until the pin moves: run
+  `make bump-submodules` in the superproject, then PR the bump. Pins
+  move deliberately, not on every child commit, so a checkout stays
+  reproducible.
 
 ## Rules for LLM sessions (non-negotiable)
 
