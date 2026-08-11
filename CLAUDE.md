@@ -111,6 +111,15 @@ scope, no attribution trailers of any kind, no AI markers. PRs state
 the problem first, then the change, then how it was verified,
 including what was NOT verified.
 
+Line wrapping follows what renders the text. Wrap plain text a
+terminal shows raw: commit message bodies at about 72 columns. Do not
+hard-wrap what a renderer reflows for the reader: PR and issue
+descriptions are Markdown on the web, so write them as one line per
+paragraph and let the column reflow, because a hard newline
+mid-paragraph only fights the renderer. In a committed .md, follow the
+file's existing convention; do not reflow a wrapped file or wrap an
+unwrapped one to change its style.
+
 ## Public repositories
 
 Everything in the osvbng tree is public GPL-3.0-or-later. Write in
