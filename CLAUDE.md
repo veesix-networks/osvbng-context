@@ -84,6 +84,18 @@ as a separate focused commit.
     plane, never baked into the dataplane. This keeps the plugins
     reusable and forces the clean control/dataplane seam that makes
     them correct.
+11. **Public thread comments identify the model and keep the agent's
+    voice.** Any comment, review, or reply an LLM session posts on a
+    public issue or pull request names the model plainly, for example
+    "Reviewed with Claude Fable 5", so contributors always know when
+    they are reading an agent and every session does it the same way.
+    The comment speaks as the agent: findings, verification results
+    and requests, stated plainly. It never makes offers or
+    commitments in the maintainer's voice ("happy to add this",
+    "we will fix that"); scheduling follow-up work is the
+    maintainer's, unless they directed the commitment. This is the
+    one deliberate exception to the no-AI-markers rule, which keeps
+    governing commits, code, docs and PR descriptions.
 
 ## Writing style (code comments, commits, PRs, docs)
 
