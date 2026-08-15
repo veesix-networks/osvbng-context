@@ -50,6 +50,8 @@ NEXT UP (in order):
    the text disagrees.
 9. Audit FRR's gRPC northbound on the pinned release: how much of
    the vtysh surface in design/routing-frr-bridge.md (BGP config,
-   oper-state reads) is reachable through YANG paths. Decides by ADR
-   whether the northbound replaces vtysh; gaps are upstream-first
-   contributions to FRR.
+   oper-state reads) plus YANG notifications for neighbor state
+   changes is reachable. One channel for config, state and events,
+   no per-protocol side channels (no BMP, no log following).
+   Decides by ADR whether the northbound replaces vtysh; gaps are
+   upstream-first contributions to FRR.

@@ -120,14 +120,30 @@ list written here.
 
 vtysh is the integration today because FRR's JSON show output is
 its most stable operational surface. The supported programmable
-alternative is the YANG-modeled northbound over gRPC, with mgmtd as
-the layer upstream is converging on. Per-daemon conversion is the
-gating factor: bgpd config and operational-state coverage have
+alternative is the YANG-modeled northbound over gRPC, with mgmtd
+as the layer upstream is converging on. Per-daemon conversion is
+the gating factor: bgpd config and operational-state coverage have
 historically been incomplete, and adopting the northbound before
-coverage lands means running two config paths at once. At some
-point we will audit whether the gRPC northbound on the pinned FRR
-release is feature-rich enough to replace the vtysh surface in this
-note, with the same empirical method as
+coverage lands means running two config paths at once.
+
+The northbound is also the intended channel for state-change
+events, BGP, OSPF and IS-IS neighbors going down, as YANG
+notifications on the same stream. FRR integration stays one
+channel for config, operational state and events. Per-protocol
+side channels (BMP for BGP, log following for the IGPs) are ruled
+out: a different contract per protocol multiplies integration
+surfaces that each need versioning, auditing and re-validation on
+every FRR bump. Where notification coverage is missing upstream,
+the fix is an upstream-first contribution to FRR (rule 9), not a
+side channel. Until then, events derive from diffing successive
+poll snapshots in the existing poller and publish on the osvbng
+event bus (pkg/events), one mechanism for every protocol, with
+detection latency bounded by the poll cadence.
+
+At some point we will audit whether the gRPC northbound on the
+pinned FRR release is feature-rich enough to replace the vtysh
+surface in this note, config, operational state and notifications
+together, with the same empirical method as
 design/frr-evpn-capability-audit.md; that audit's result, not
 transport preference, drives the ADR. See todo.md.
 
