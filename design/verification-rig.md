@@ -52,9 +52,17 @@ hand-copied binaries.
 
 ## What this means for a session
 
-CI on a pull request gates on build and unit tests only; the
-integration suites run post-merge on a self-hosted runner. So
-"verified" in a PR body can never mean "CI will catch it": run
+The suites run locally, and only locally. Workflow files for them
+exist under `.github/workflows/`, but they are not the
+verification path in practice: building the dataplane from
+scratch on a runner made every run too slow, so integration runs
+never went through CI and the maintainer runs suites on the dev
+machine. CI gates a pull request on build and unit tests only.
+Wiring the suites into CI is wanted and is blocked on the same
+thing as todo item 2: prebuilt version-stamped artifacts, so a
+runner assembles an image instead of compiling a dataplane.
+
+So "verified" in a PR body can never mean "CI will catch it": run
 the suite covering the touched area locally before calling work
 done, and anything a subscriber touches runs against bngblaster.
 Pick the suite by number from the catalog in the methodology doc,

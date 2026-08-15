@@ -27,7 +27,10 @@ NEXT UP (in order):
    artifacts: the hand-committed plugin binaries in
    osvbng/test-infra/vpp-plugins/ go away, because they let the rig
    silently verify against a stale dataplane
-   (design/verification-rig.md).
+   (design/verification-rig.md). Same artifacts unblock running the
+   integration suites in CI at all: the workflows exist but were
+   never used because the runner built the dataplane from scratch
+   every time; with prebuilt debs a runner just assembles the image.
 3. Plugin imports: DONE. Nine plugins in osvbng-vpp with history
    (punt, pppoe, ipoe, l2gw, srg, tunnel, cgnat, qos_sched, l2tpv2);
    all compile and load together with zero node-resolution errors.
