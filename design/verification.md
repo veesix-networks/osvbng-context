@@ -1,9 +1,11 @@
 # How changes are verified
 
-Rule 8 says a change is done when it runs against reality.
-Reality is the integration suites under `osvbng/tests/`, run
-locally; there is no standing test infrastructure. This note maps
-those suites so a session can find and run the right one. The
+A change is done when it runs against reality, not when it
+compiles or its unit tests pass (CLAUDE.md, rules for LLM
+sessions). Reality is the integration suites under
+`osvbng/tests/`, run locally; there is no standing test
+infrastructure. This note maps those suites so a session can find
+and run the right one. The
 authoritative description lives with the code in
 `osvbng/docs/qa/testing-methodology.md` (suite catalog, HA
 testing, dataplane performance testing, release qualification);
@@ -49,9 +51,9 @@ a result as proof, check the drop's freshness
 changed in osvbng-vpp, and state the dataplane provenance in the
 PR's verification section. A change in osvbng-vpp itself is only
 exercised after a fresh drop built from that change. The standing
-fix is todo item 2: one release build produces version-stamped
-artifacts and the suites consume those, removing the hand-copied
-binaries.
+fix is queued in todo.md: one release build produces
+version-stamped artifacts and the suites consume those, removing
+the hand-copied binaries.
 
 ## What this means for a session
 
@@ -62,7 +64,7 @@ scratch on a runner made every run too slow, so integration runs
 never went through CI and the maintainer runs suites on the dev
 machine. CI gates a pull request on build and unit tests only.
 Wiring the suites into CI is wanted and is blocked on the same
-thing as todo item 2: prebuilt version-stamped artifacts, so a
+artifact work: prebuilt version-stamped dataplane artifacts, so a
 runner assembles an image instead of compiling a dataplane.
 
 So "verified" in a PR body can never mean "CI will catch it": run
