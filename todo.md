@@ -27,7 +27,7 @@ NEXT UP (in order):
    artifacts: the hand-committed plugin binaries in
    osvbng/test-infra/vpp-plugins/ go away, because they let the rig
    silently verify against a stale dataplane
-   (design/verification-rig.md). Same artifacts unblock running the
+   (design/verification.md). Same artifacts unblock running the
    integration suites in CI at all: the workflows exist but were
    never used because the runner built the dataplane from scratch
    every time; with prebuilt debs a runner just assembles the image.
