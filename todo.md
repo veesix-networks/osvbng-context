@@ -48,3 +48,10 @@ NEXT UP (in order):
 8. RFC-audit the DHCP/PPPoE/L2TP handlers against the corpus in
    references/: every behavioral branch cites its section; fix where
    the text disagrees.
+9. Audit FRR's gRPC northbound on the pinned release: how much of
+   the vtysh surface in design/routing-frr-bridge.md (BGP config,
+   oper-state reads) plus YANG notifications for neighbor state
+   changes is reachable. One channel for config, state and events,
+   no per-protocol side channels (no BMP, no log following).
+   Decides by ADR whether the northbound replaces vtysh; gaps are
+   upstream-first contributions to FRR.
