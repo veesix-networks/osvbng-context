@@ -64,3 +64,11 @@ NEXT UP (in order):
     Punt-path headroom at scale, and sessions survive daemon
     restarts, same direction as item 4. Does not apply at the
     LAC. RFC 1661 section 5.8 open while writing.
+11. Mine the legacy context repo's DECISIONS files lazily: when a
+    session touches an area, it checks the legacy decisions for
+    that area and promotes anything still binding into an ADR
+    here. Six became ADRs 0003 to 0008 in the initial migration;
+    about 50 remain (RADIUS and CoA, subscriber runtime mutation,
+    DHCP relay and LDRA, telemetry registry, API pagination,
+    egress batching, others). The legacy repo stays available
+    until mined.

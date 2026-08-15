@@ -48,3 +48,4 @@ CLAUDE.md here before touching anything in the tree.
 | [cgnat-architecture](design/cgnat-architecture.md) | CGNAT control/dataplane split, lifecycle, persistence and HA |
 | [l2tp-architecture](design/l2tp-architecture.md) | L2TPv2 LAC and LNS: control-plane layout and the dataplane seam |
 | [pppoe-architecture](design/pppoe-architecture.md) | PPPoE termination: discovery, PPP machinery, echo at scale, HA replay |
+| [verification-rig](design/verification-rig.md) | The containerlab and bngblaster rig rule 8 verifies against |
