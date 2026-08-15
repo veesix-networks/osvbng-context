@@ -23,7 +23,11 @@ NEXT UP (in order):
    - versioned shm header plus a capability/version query in the .api
 2. Wire osvbng releases to osvbng-vpp artifacts: binapi generation in
    the pipeline (ADR 0002), osvbng consumes version-stamped bindings
-   and debs from one build.
+   and debs from one build. The test rig consumes the same
+   artifacts: the hand-committed plugin binaries in
+   osvbng/test-infra/vpp-plugins/ go away, because they let the rig
+   silently verify against a stale dataplane
+   (design/verification-rig.md).
 3. Plugin imports: DONE. Nine plugins in osvbng-vpp with history
    (punt, pppoe, ipoe, l2gw, srg, tunnel, cgnat, qos_sched, l2tpv2);
    all compile and load together with zero node-resolution errors.
