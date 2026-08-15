@@ -57,3 +57,10 @@ NEXT UP (in order):
    no per-protocol side channels (no BMP, no log following).
    Decides by ADR whether the northbound replaces vtysh; gaps are
    upstream-first contributions to FRR.
+10. LCP echo offload into the osvbng_pppoe plugin: answer peer
+    Echo-Requests and generate ours in-node, magic numbers
+    programmed at session setup, every non-echo LCP frame still
+    punts, an event fires only when the miss threshold trips.
+    Punt-path headroom at scale, and sessions survive daemon
+    restarts, same direction as item 4. Does not apply at the
+    LAC. RFC 1661 section 5.8 open while writing.

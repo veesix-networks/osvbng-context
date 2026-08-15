@@ -80,6 +80,19 @@ without locking session state. Replies reset the miss count on
 the wheel; `maxMisses` consecutive silent intervals terminate the
 session through the normal teardown path.
 
+Echo handling is a control-plane responder today; the planned
+direction is offload into the dataplane. The plugin would answer
+the peer's Echo-Requests and generate ours in-node, which needs
+the negotiated magic numbers programmed at session setup, and the
+daemon would hear only a liveness event when the miss threshold
+trips. The scope boundary is echo-only: every other LCP frame in
+Opened state (renegotiation, Terminate-Request, Protocol-Reject)
+keeps punting, and none of this applies at the LAC, where echoes
+ride through to the LNS. Beyond the punt-path headroom at scale,
+the sharper win is restart survival: sessions keep answering
+while the daemon is down, the same rationale as the ARP and ND
+move queued in todo.md. Not scheduled; see todo.md.
+
 ## Restart and HA
 
 Established sessions survive daemon restarts and failovers by
