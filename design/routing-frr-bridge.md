@@ -116,6 +116,21 @@ design/frr-evpn-capability-audit.md). Counts drift; trust the
 handler directories under `pkg/handlers/show/protocols/` over any
 list written here.
 
+## Beyond vtysh
+
+vtysh is the integration today because FRR's JSON show output is
+its most stable operational surface. The supported programmable
+alternative is the YANG-modeled northbound over gRPC, with mgmtd as
+the layer upstream is converging on. Per-daemon conversion is the
+gating factor: bgpd config and operational-state coverage have
+historically been incomplete, and adopting the northbound before
+coverage lands means running two config paths at once. At some
+point we will audit whether the gRPC northbound on the pinned FRR
+release is feature-rich enough to replace the vtysh surface in this
+note, with the same empirical method as
+design/frr-evpn-capability-audit.md; that audit's result, not
+transport preference, drives the ADR. See todo.md.
+
 ## References
 
 - Telemetry SDK: `osvbng/pkg/telemetry/` (`show.go`,
