@@ -1,10 +1,14 @@
 # Control-plane performance and logging
 
-The whole Go control plane runs on roughly one core. ADR 0007's
-auto layout reserves a single core for it (VPP's main thread and
-workers take the rest, FRR shares the host), so anything that runs
-per packet, per session or per event during a subscriber storm
-competes for that one core. Scale testing repeatedly lost
+The Go control plane runs on a small fixed core budget. ADR 0007
+resolves the layout per host: the auto layout reserves one core
+today, and `OSVBNG_CP_CORES` pins the control plane to a larger
+set on big hosts (GOMAXPROCS and taskset both follow the set, so
+two to four control-plane cores is a supported deployment, not a
+special build). The budget's size is a host decision; what never
+changes is that it is fixed while storm work scales with
+subscriber count, so anything that runs per packet, per session or
+per event competes for it. Scale testing repeatedly lost
 throughput to exactly two things, lock contention and logging, so
 the discipline here is not taste, it is measured. The one-line
 rule: **a hot path never blocks on observability or on a lock held
@@ -129,5 +133,13 @@ not pkg/logger.
   landed, but it is the next candidate under storm load.
 - The DHCPv6 packet pipeline still parses each packet three times
   through gopacket.
+- The auto CPU layout does not implement its own documented
+  tiers: pkg/config/cpu.go's layout table promises workers scaling
+  with host size and a two-core control plane at 8 plus cores, but
+  autoWorkerCores always returns core 1 and autoCPCores always
+  core 2. Control-plane cores also have no YAML intent knob
+  (env override only, unlike dataplane.main-core and workers) and
+  nothing is NUMA-aware. On large hosts the auto layout wastes
+  the machine.
 
-All three are queued in todo.md.
+All four are queued in todo.md.

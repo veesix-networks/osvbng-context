@@ -89,3 +89,34 @@ NEXT UP (in order):
     - DHCPv6 packet pipeline parses each packet three times
       through gopacket; single-parse rework, latency not
       contention
+13. CPU layout catches up with big hosts: implement the auto
+    tiers pkg/config/cpu.go's own table documents (workers scale
+    with host size, two or more control-plane cores at 8 plus),
+    add a YAML intent knob for control-plane cores beside
+    dataplane.main-core and workers (env override only today),
+    and make placement NUMA-aware on multi-socket hosts (workers
+    near their NICs, control-plane cores spread or pinned per
+    socket by intent, per ADR 0007's resolve-locally principle).
+    Small-host behavior is unchanged; today's auto layout wastes
+    large machines.
+14. Directions distilled from the CUPS design study, carried here
+    by substance:
+    - reconciled desired state at the southbound seam: HA
+      restore, interface-deletion cleanup and cross-peer ifindex
+      bugs were all call-ordering symptoms; move toward the
+      control plane computing declarative per-session dataplane
+      state that the southbound reconciles, rather than
+      imperative call sequences
+    - services attach to circuits, not sessions: CGNAT and l2gw
+      keyed on attachment circuits and prefixes so standalone
+      deployments carry no BNG session machinery
+    - admission serialized per subscriber key, so one
+      misbehaving subscriber's churn cannot reorder or starve
+      another's session setup
+    - punt-storm dampening per subscriber key ahead of the
+      protocol components, complementing the in-node punt
+      policer's aggregate cap
+    - capability negotiation grows teeth: the plugin
+      capability/version query (rule on plugins) becomes
+      something the control plane enforces, refusing or
+      degrading config the dataplane cannot place
