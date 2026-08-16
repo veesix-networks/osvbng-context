@@ -30,6 +30,8 @@ CLAUDE.md here before touching anything in the tree.
 | [0007](decisions/0007-cpu-partitioning-intent-config.md) | CPU partitioning config expresses intent, not core IDs | Accepted |
 | [0008](decisions/0008-async-vpp-transport.md) | Async VPP binary API transport with reconciliation in the session layer | Accepted |
 | [0009](decisions/0009-telemetry-registry.md) | Typed telemetry registry as the only metrics path | Accepted |
+| [0010](decisions/0010-dataplane-gateway-responders-srg-convergence.md) | Gateway ARP and ND answered in the dataplane, SRG state convergent | Accepted |
+| [0011](decisions/0011-lcp-echo-offload.md) | LCP echo answered and generated in the osvbng_pppoe plugin | Accepted |
 
 ## Design notes
 
