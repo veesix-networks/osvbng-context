@@ -102,8 +102,8 @@ as a separate focused commit.
     one deliberate exception to the no-AI-markers rule, which keeps
     governing commits, code, docs and PR descriptions.
 12. **Hot paths respect the core budget.** The control plane runs
-    on a small fixed core set (ADR 0007; one core by default, a
-    configured set on larger hosts). Storm work scales with
+    on a small fixed core set (ADR 0007; sized by the auto layout
+    or pinned by config). Storm work scales with
     subscribers while the budget does not, so anything per packet,
     per session or per event competes for it. A hot
     path never blocks on observability or on a lock held across

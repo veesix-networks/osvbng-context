@@ -64,25 +64,18 @@ NEXT UP (in order):
     LDRA, API pagination, egress batching, others). The legacy
     repo stays available until mined.
 11. Hot-path debt recorded in design/performance-and-logging.md:
-    - storm sampler in pkg/logger, one line per key per interval
-      plus a suppressed count; per-event error logging on
-      storm-drivable paths stays banned until it exists
     - event bus delivery without a goroutine per event per
       subscriber (pkg/events/local), bounded per-subscriber
       worker delivery instead
     - DHCPv6 packet pipeline parses each packet three times
       through gopacket; single-parse rework, latency not
       contention
-12. CPU layout catches up with big hosts: implement the auto
-    tiers pkg/config/cpu.go's own table documents (workers scale
-    with host size, two or more control-plane cores at 8 plus),
-    add a YAML intent knob for control-plane cores beside
-    dataplane.main-core and workers (env override only today),
-    and make placement NUMA-aware on multi-socket hosts (workers
-    near their NICs, control-plane cores spread or pinned per
-    socket by intent, per ADR 0007's resolve-locally principle).
-    Small-host behavior is unchanged; today's auto layout wastes
-    large machines.
+12. NUMA-aware CPU placement on multi-socket hosts: resolution is
+    topology-blind today, NUMA layouts are operator-expressed
+    through explicit core sets (dataplane.cp-cores, workers). An
+    intent-level answer (workers near their NICs, control-plane
+    cores spread or pinned per socket) follows ADR 0007's
+    resolve-locally principle and needs its own design pass.
 13. Directions distilled from the CUPS design study, carried here
     by substance:
     - reconciled desired state at the southbound seam: HA
