@@ -29,6 +29,7 @@ CLAUDE.md here before touching anything in the tree.
 | [0006](decisions/0006-cgnat-port-block-allocation.md) | CGNAT port-block allocation architecture | Accepted |
 | [0007](decisions/0007-cpu-partitioning-intent-config.md) | CPU partitioning config expresses intent, not core IDs | Accepted |
 | [0008](decisions/0008-async-vpp-transport.md) | Async VPP binary API transport with reconciliation in the session layer | Accepted |
+| [0009](decisions/0009-telemetry-registry.md) | Typed telemetry registry as the only metrics path | Accepted |
 
 ## Design notes
 
@@ -48,3 +49,4 @@ CLAUDE.md here before touching anything in the tree.
 | [cgnat-architecture](design/cgnat-architecture.md) | CGNAT control/dataplane split, lifecycle, persistence and HA |
 | [l2tp-architecture](design/l2tp-architecture.md) | L2TPv2 LAC and LNS: control-plane layout and the dataplane seam |
 | [pppoe-architecture](design/pppoe-architecture.md) | PPPoE termination: discovery, PPP machinery, echo at scale, HA replay |
+| [telemetry](design/telemetry.md) | Metric flow: the typed registry, emission models, exporters, cardinality |
