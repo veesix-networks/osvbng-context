@@ -2,10 +2,11 @@
 
 The Go control plane runs on a small fixed core budget. ADR 0007
 resolves the layout per host: the auto layout reserves one core
-today, and `OSVBNG_CP_CORES` pins the control plane to a larger
-set on big hosts (GOMAXPROCS and taskset both follow the set, so
-two to four control-plane cores is a supported deployment, not a
-special build). The budget's size is a host decision; what never
+on small hosts and two at 8 plus cores, and `dataplane.cp-cores`
+(or `OSVBNG_CP_CORES`) pins a larger set explicitly, NUMA layouts
+included (GOMAXPROCS and taskset both follow the set, so two to
+four control-plane cores is a supported deployment, not a special
+build). The budget's size is a host decision; what never
 changes is that it is fixed while storm work scales with
 subscriber count, so anything that runs per packet, per session or
 per event competes for it. Scale testing repeatedly lost
@@ -107,11 +108,13 @@ packet pipeline (gopacket parse overhead, latency not contention).
    detail is debug, and the call site checks the level before
    building fields, so disabled debug costs no allocation.
 4. Storm-shaped errors are sampled, never per-event. A RADIUS
-   timeout during a storm should be one line per peer per
-   interval plus a suppressed count, not ten thousand identical
-   lines that bury the signal and burn the ring. pkg/logger has
-   no sampler yet (queued in todo.md); until it exists, do not
-   add per-event error logs on any path a storm can drive.
+   outage during a storm should be one line per key per interval
+   plus a suppressed count, not ten thousand identical lines that
+   bury the signal and burn the ring. logger.Sampler does this;
+   the AAA auth-failure log is the reference caller. Keys follow
+   the same bounded-cardinality discipline as metric labels,
+   never subscriber or MAC. An unsampled per-event error log on a
+   storm-drivable path does not merge.
 5. Precompute child loggers with their fixed fields at
    construction, pass primitives as fields, never fmt.Sprintf
    into a message.
@@ -126,20 +129,14 @@ not pkg/logger.
 
 ## Known debt, 2026-08
 
-- pkg/logger has no storm sampler (logging rule 4).
 - The event bus delivers by spawning a goroutine per event per
   subscriber (pkg/events/local/bus.go), the pattern rule 5 bans.
   It has not resurfaced in profiles since the session-setup fixes
   landed, but it is the next candidate under storm load.
 - The DHCPv6 packet pipeline still parses each packet three times
   through gopacket.
-- The auto CPU layout does not implement its own documented
-  tiers: pkg/config/cpu.go's layout table promises workers scaling
-  with host size and a two-core control plane at 8 plus cores, but
-  autoWorkerCores always returns core 1 and autoCPCores always
-  core 2. Control-plane cores also have no YAML intent knob
-  (env override only, unlike dataplane.main-core and workers) and
-  nothing is NUMA-aware. On large hosts the auto layout wastes
-  the machine.
+- CPU layout resolution is topology-blind: NUMA placement is
+  operator-expressed through the explicit core sets; nothing
+  reads socket topology.
 
-All four are queued in todo.md.
+All three are queued in todo.md.
