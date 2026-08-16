@@ -97,3 +97,15 @@ NEXT UP (in order):
       capability/version query (rule on plugins) becomes
       something the control plane enforces, refusing or
       degrading config the dataplane cannot place
+14. PPPoE IA_NA is allocated but never delivered: the control
+    plane takes an address from the IANA pool at session open and
+    shows it in the API, but the DHCPv6 provider serves only
+    IA_PD and DNS on PPPoE, so the client never receives the
+    address and no /128 is programmed toward the session. Decide
+    the model with RFC 8415 open (serve IA_NA from the pool in
+    the in-band exchange, or drop the administrative allocation
+    and commit to SLAAC), then make the API stop reporting an
+    address the subscriber does not hold. Found while verifying
+    the dual-stack dataplane bindings; suite 04's FIB assertion
+    deliberately covers the delegated /56 only until this is
+    decided.
