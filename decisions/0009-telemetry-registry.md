@@ -79,9 +79,12 @@ The registry's contract:
 - Emit costs about 4 ns with zero allocations, measured identical
   with and without streaming subscribers. The 117 percent idle CPU
   cost is gone.
-- Every exporter (Prometheus, gRPC streaming, gNMI) reads the same
-  registry through snapshots or subscriptions, so adding an
-  exporter never touches components.
+- Exporters read the registry through snapshots or subscriptions,
+  so adding an exporter never touches components. As of 2026-08
+  the Prometheus exporter is the only consumer built; Subscribe
+  and streaming_only exist in the SDK, tested, for streaming
+  exporters that have not been written. Until one is, a
+  streaming_only metric is visible to no exporter at all.
 - Adding a metric means choosing an emission model and passing the
   cardinality rules; a registration that violates them panics at
   process start rather than shipping wrong or unbounded data.

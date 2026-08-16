@@ -32,11 +32,13 @@ Producers feed it two ways:
   knob; `docs/configuration/monitoring.md` documents that there is
   nothing to configure.
 
-Consumers read it two ways: snapshot pull (the
-`plugins/exporter/prometheus` plugin renders `AppendSnapshot` on
-every scrape) and subscription push (the gRPC streaming exporter
-and gNMI gateway receive tick-driven updates for changed metrics).
-Adding an exporter touches no component.
+One consumer exists today: the `plugins/exporter/prometheus`
+plugin renders `AppendSnapshot` on every scrape. The registry's
+second face, tick-driven subscription push (`Subscribe`), is built
+and tested in the SDK but nothing in-tree consumes it; it is there
+for the streaming exporters (gRPC, gNMI) the architecture
+anticipates, which have not been written. Adding an exporter of
+either kind touches no component.
 
 Lifecycle events are not metrics. Session up, HA failover and
 interface transitions travel the event bus (`pkg/events/`); the
@@ -68,7 +70,9 @@ push costs a handle per series and runs on your critical path.
    not launder identity through a label name it does not match.
    `streaming_only` is the sole escape, it hides the metric from
    Prometheus, and the registering component owns
-   `UnregisterSeries` cleanup on teardown.
+   `UnregisterSeries` cleanup on teardown. With no streaming
+   exporter built yet, a streaming_only metric currently reaches
+   no exporter, so registering one buys cost for no output.
 3. Registration is a cost decision. Each registered show path is
    polled every 10 seconds on the shared control-plane core; for
    vtysh-backed handlers that is a fork and exec per path per
@@ -101,7 +105,10 @@ push costs a handle per series and runs on your critical path.
 
 Known drift, 2026-08: `osvbng/docs/architecture/COLLECTORS.md`
 and the collector section of `PLUGINS.md` still describe the
-retired JSON-cache pipeline, and the TELEMETRY.md architecture
+retired JSON-cache pipeline; the TELEMETRY.md architecture
 diagram shows a 30 second expensive-pull tier that does not exist,
-the code has a single 10 second cadence. Trust `pkg/telemetry`
-over any diagram until those pages are corrected in osvbng.
+the code has a single 10 second cadence; and TELEMETRY.md names
+the gRPC streaming exporter and gNMI gateway as consumers when
+neither has been written. Trust `pkg/telemetry` and
+`plugins/exporter/` over any diagram until those pages are
+corrected in osvbng.
