@@ -79,3 +79,13 @@ NEXT UP (in order):
     (RADIUS and CoA, subscriber runtime mutation, DHCP relay and
     LDRA, API pagination, egress batching, others). The legacy
     repo stays available until mined.
+12. Hot-path debt recorded in design/performance-and-logging.md:
+    - storm sampler in pkg/logger, one line per key per interval
+      plus a suppressed count; per-event error logging on
+      storm-drivable paths stays banned until it exists
+    - event bus delivery without a goroutine per event per
+      subscriber (pkg/events/local), bounded per-subscriber
+      worker delivery instead
+    - DHCPv6 packet pipeline parses each packet three times
+      through gopacket; single-parse rework, latency not
+      contention

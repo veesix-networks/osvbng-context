@@ -101,6 +101,15 @@ as a separate focused commit.
     maintainer's, unless they directed the commitment. This is the
     one deliberate exception to the no-AI-markers rule, which keeps
     governing commits, code, docs and PR descriptions.
+12. **Hot paths respect the core budget.** The whole control plane
+    runs on about one core (ADR 0007); anything per packet, per
+    session or per event competes for it during a storm. A hot
+    path never blocks on observability or on a lock held across
+    I/O; every queue is bounded with a chosen full behavior; no
+    goroutine per packet, session or event; storm-shaped logging
+    is sampled, never per-event. The rules and the profiling
+    evidence behind them are in design/performance-and-logging.md;
+    profile before optimizing.
 
 ## Writing style (code comments, commits, PRs, docs)
 
