@@ -23,7 +23,14 @@ NEXT UP (in order):
    - versioned shm header plus a capability/version query in the .api
 2. Wire osvbng releases to osvbng-vpp artifacts: binapi generation in
    the pipeline (ADR 0002), osvbng consumes version-stamped bindings
-   and debs from one build.
+   and debs from one build. The test rig consumes the same
+   artifacts: the hand-committed plugin binaries in
+   osvbng/test-infra/vpp-plugins/ go away, because they let the rig
+   silently verify against a stale dataplane
+   (design/verification.md). Same artifacts unblock running the
+   integration suites in CI at all: the workflows exist but were
+   never used because the runner built the dataplane from scratch
+   every time; with prebuilt debs a runner just assembles the image.
 3. Plugin imports: DONE. Nine plugins in osvbng-vpp with history
    (punt, pppoe, ipoe, l2gw, srg, tunnel, cgnat, qos_sched, l2tpv2);
    all compile and load together with zero node-resolution errors.
@@ -64,3 +71,11 @@ NEXT UP (in order):
     Punt-path headroom at scale, and sessions survive daemon
     restarts, same direction as item 4. Does not apply at the
     LAC. RFC 1661 section 5.8 open while writing.
+11. Mine the legacy context repo's DECISIONS files lazily: when a
+    session touches an area, it checks the legacy decisions for
+    that area and promotes anything still binding into an ADR
+    here. Six became ADRs 0003 to 0008 in the initial migration
+    and the telemetry registry became ADR 0009; about 50 remain
+    (RADIUS and CoA, subscriber runtime mutation, DHCP relay and
+    LDRA, API pagination, egress batching, others). The legacy
+    repo stays available until mined.
