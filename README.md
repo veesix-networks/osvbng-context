@@ -52,5 +52,6 @@ CLAUDE.md here before touching anything in the tree.
 | [l2tp-architecture](design/l2tp-architecture.md) | L2TPv2 LAC and LNS: control-plane layout and the dataplane seam |
 | [pppoe-architecture](design/pppoe-architecture.md) | PPPoE termination: discovery, PPP machinery, echo at scale, HA replay |
 | [verification](design/verification.md) | How changes are verified: the local containerlab and bngblaster suites |
+| [ipoe-v6-dataplane-gap](design/ipoe-v6-dataplane-gap.md) | Closed: mgmt-network route race behind the IPoE v6 suite flakes, and the false trails |
 | [telemetry](design/telemetry.md) | Metric flow: the typed registry, emission models, exporters, cardinality |
 | [performance-and-logging](design/performance-and-logging.md) | Hot-path concurrency and logging rules, grounded in profiling evidence |
