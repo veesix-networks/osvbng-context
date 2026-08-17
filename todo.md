@@ -97,15 +97,16 @@ NEXT UP (in order):
       capability/version query (rule on plugins) becomes
       something the control plane enforces, refusing or
       degrading config the dataplane cannot place
-14. PPPoE IA_NA is allocated but never delivered: the control
-    plane takes an address from the IANA pool at session open and
-    shows it in the API, but the DHCPv6 provider serves only
-    IA_PD and DNS on PPPoE, so the client never receives the
-    address and no /128 is programmed toward the session. Decide
-    the model with RFC 8415 open (serve IA_NA from the pool in
-    the in-band exchange, or drop the administrative allocation
-    and commit to SLAAC), then make the API stop reporting an
-    address the subscriber does not hold. Found while verifying
-    the dual-stack dataplane bindings; suite 04's FIB assertion
-    deliberately covers the delegated /56 only until this is
-    decided.
+14. PPPoE IA_NA closure, two small pieces. The serving path is
+    correct (the provider answers the IAs the client requests,
+    RFC 8415, and the session-open allocation is the reservation
+    DHCPv6 then serves), but bngblaster hard-gates IA_NA to IPoE
+    access in its source, so no integration suite can exercise
+    IA_NA over PPPoE; the bind path is unit-covered
+    (TestPPPoEDHCPv6BindProgramsDataplane) and suite 04 asserts
+    the delegated /56 only. Remaining: contribute the PPPoE
+    IA_NA knob to bngblaster upstream so the rig can exercise it
+    (we take from that tool, we give back), and make the API
+    distinguish a reserved address from a bound one, since a
+    PD-only subscriber's session today shows an IPv6Address with
+    lease 0 that the client never requested.
