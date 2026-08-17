@@ -147,3 +147,28 @@ NEXT UP (in order):
       nowhere; the stated reason (global-source RAs) was fixed in
       May. Re-enable the deferred checks and add v6 forwarding
       assertions where the matrix is v4-only.
+16. CI hardening from the 2026-08-17 bring-up, two items with
+    recorded evidence.
+    - PR runs and the nightly share the rig concurrency group, and
+      twice a PR integration run entering or leaving that queue
+      cancelled the RUNNING nightly (runs 32050228092 and
+      32062082757), despite cancel-in-progress false. The mutex
+      exists because every run builds and consumes the same
+      veesixnetworks/osvbng:local image tag on the box. The fix
+      that removes the coupling entirely: per-run image tags (the
+      topologies take the tag from an env default) so runs stop
+      sharing mutable state, then the rig group can go away.
+      Interim discipline: no PR creation or merge while a sweep
+      runs.
+    - Test labs oversubscribe the box: the auto layout gives every
+      container total-3 pinned VPP workers, five concurrent labs
+      poll about five times more threads than cores, and the most
+      timing-sensitive suites flake (52's establishment, sweep
+      32056764011). Pinning all labs to the same two cores was
+      tried and reverted (#466, #467): identical pins concentrate
+      the polling on two host cores and broke four HA/pwhe suites.
+      VPP cannot run unpinned workers, so right-sizing needs
+      per-run core assignment from the CI layer (the runner knows
+      its concurrency; topologies do not) or an unpinned worker
+      mode in the dataplane. Until then the auto layout stands and
+      suite 52 carries the residual sensitivity.
