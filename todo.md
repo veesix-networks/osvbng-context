@@ -97,16 +97,19 @@ NEXT UP (in order):
       capability/version query (rule on plugins) becomes
       something the control plane enforces, refusing or
       degrading config the dataplane cannot place
-14. PPPoE IA_NA closure, two small pieces. The serving path is
-    correct (the provider answers the IAs the client requests,
-    RFC 8415, and the session-open allocation is the reservation
-    DHCPv6 then serves), but bngblaster hard-gates IA_NA to IPoE
-    access in its source, so no integration suite can exercise
-    IA_NA over PPPoE; the bind path is unit-covered
-    (TestPPPoEDHCPv6BindProgramsDataplane) and suite 04 asserts
-    the delegated /56 only. Remaining: contribute the PPPoE
-    IA_NA knob to bngblaster upstream so the rig can exercise it
-    (we take from that tool, we give back), and make the API
-    distinguish a reserved address from a bound one, since a
-    PD-only subscriber's session today shows an IPv6Address with
-    lease 0 that the client never requested.
+14. PPPoE IPv6 numbering model, maintainer direction fixed
+    2026-08: PD-only WAN is the expected shape. IPv6CP gives both
+    ends link-locals only (RFC 5072 negotiates an interface
+    identifier, never a global address); the subscriber routes via
+    the link-local next hop and sources from the delegated prefix,
+    which is what bngblaster models (its source hard-gates IA_NA
+    to IPoE access) and what suite 04 now asserts end to end.
+    Serving IA_NA when a CPE requests one stays correct and
+    unit-covered (TestPPPoEDHCPv6BindProgramsDataplane, RFC 8415:
+    answer the IAs requested). Remaining work that follows from
+    the direction: stop pre-allocating an IANA-pool address per
+    PPPoE session at open (allocate lazily on the first IA_NA
+    request, ResolveV6 already does this when the context carries
+    no address), so PD-only subscribers stop burning pool
+    addresses and the API stops showing an address with lease 0
+    the client never requested.
