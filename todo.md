@@ -113,3 +113,37 @@ NEXT UP (in order):
     no address), so PD-only subscribers stop burning pool
     addresses and the API stops showing an address with lease 0
     the client never requested.
+15. IPv6 first-class audit, 2026-08-17: gaps that survived the
+    session in which the ip6-ll kernel-ND poisoning, the dead
+    session re-attach and the punt policer burst division were
+    found and fixed. Ranked; each item stands alone.
+    - VPP's native RA runs unsuppressed beside Go's SRG-gated
+      emitter on every access sub-interface (ungated, physical
+      MAC, answers on standby). It currently masks a second bug:
+      Go's periodic RA only serves sessions after DHCPv6 binds
+      (IPv6Bound), so suppressing native RA without fixing the
+      unsolicited-RA path strands clients that wait rather than
+      solicit. Fix together. ADR 0010 owns the direction.
+    - L2TP LNS has no IPv6 service plane: IA_NA/PD are allocated
+      and reported but no RA, ND or DHCPv6 ever reaches the
+      subscriber (PPP 0x0057 returned unhandled). IPoE and PPPoE
+      both have the full set; LNS has none.
+    - PPPoE reactive RS/NS/DHCPv6 responders skip the SRG-active
+      gate their IPoE twins and the periodic PPPoE emitter all
+      apply, and bngSourceMAC falls back to the physical MAC on
+      standby.
+    - HA unsolicited-NA flood emits per GetIPv6Address, so
+      PD-only subscribers (the expected PPPoE shape, item 14) get
+      no v6 announcement on failover.
+    - RADIUS accounting never sends Framed-IPv6-Address (168);
+      the IA_NA address is invisible in accounting while v4 is
+      not.
+    - DHCPv6 local mode drops Confirm and Information-Request
+      silently; relay mode forwards the latter, an internal
+      asymmetry, and the RA advertises Other=1 which invites it.
+    - Test coverage: no HA suite verifies v6 forwarding after
+      failover, no PWHE/EVPN suite verifies v6 at all, and suite
+      33's v6 skips cite osvbng-context#89, which resolves
+      nowhere; the stated reason (global-source RAs) was fixed in
+      May. Re-enable the deferred checks and add v6 forwarding
+      assertions where the matrix is v4-only.
