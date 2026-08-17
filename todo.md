@@ -97,3 +97,16 @@ NEXT UP (in order):
       capability/version query (rule on plugins) becomes
       something the control plane enforces, refusing or
       degrading config the dataplane cannot place
+14. PPPoE IA_NA closure, two small pieces. The serving path is
+    correct (the provider answers the IAs the client requests,
+    RFC 8415, and the session-open allocation is the reservation
+    DHCPv6 then serves), but bngblaster hard-gates IA_NA to IPoE
+    access in its source, so no integration suite can exercise
+    IA_NA over PPPoE; the bind path is unit-covered
+    (TestPPPoEDHCPv6BindProgramsDataplane) and suite 04 asserts
+    the delegated /56 only. Remaining: contribute the PPPoE
+    IA_NA knob to bngblaster upstream so the rig can exercise it
+    (we take from that tool, we give back), and make the API
+    distinguish a reserved address from a bound one, since a
+    PD-only subscriber's session today shows an IPv6Address with
+    lease 0 that the client never requested.
