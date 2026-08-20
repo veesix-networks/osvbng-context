@@ -28,11 +28,16 @@ NEXT UP (in order):
    instead of punt for the rest. Removes the punt-storm surface and
    keeps answering across daemon restarts.
 4. gNMI operational-state read path on the daemon.
-5. Plugin suite rework toward generic UP building blocks. The old
-   cgnat plan here (per-worker pools plus handoff) is dead: it was
-   tried and reverted because handoff cost dominates at BNG packet
-   rates (osvbng-vpp cgnat AUDIT.md Finding #8). cgnat stays on the
-   shared session pool unless hot-worker benchmarks reopen it.
+5. Plugin suite rework toward generic UP building blocks. cgnat
+   runs on a shared session pool today, after per-worker pools
+   plus handoff were tried and reverted (osvbng-vpp cgnat AUDIT.md
+   Finding #8). Treat that as the current implementation, not a
+   settled architecture: the revert handed off every packet rather
+   than only RSS misses, and measured about one packet per second
+   on QEMU where the cost it found was KVM waking a descheduled
+   vCPU. Neither condition resembles bare metal at high core
+   count, which is where a shared writable cache line per
+   translated packet binds first.
 6. Multi-instance management design ADR: instances stay autonomous;
    a central controller as desired-state store and redundancy
    arbiter; identity crosses machines as role names only; bus and
