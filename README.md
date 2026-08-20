@@ -49,6 +49,7 @@ CLAUDE.md here before touching anything in the tree.
 | [frr-evpn-capability-audit](design/frr-evpn-capability-audit.md) | Empirically verified FRR 10.7 EVPN behavior |
 | [routing-frr-bridge](design/routing-frr-bridge.md) | How osvbng drives FRR: vtysh wrappers, show registry, telemetry cost rules |
 | [cgnat-architecture](design/cgnat-architecture.md) | CGNAT control/dataplane split, lifecycle, persistence and HA |
+| [cgnat-worker-model](design/cgnat-worker-model.md) | Open: how CGNAT distributes across workers, and what the revert did not measure |
 | [l2tp-architecture](design/l2tp-architecture.md) | L2TPv2 LAC and LNS: control-plane layout and the dataplane seam |
 | [pppoe-architecture](design/pppoe-architecture.md) | PPPoE termination: discovery, PPP machinery, echo at scale, HA replay |
 | [verification](design/verification.md) | How changes are verified: the local containerlab and bngblaster suites |

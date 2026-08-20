@@ -23,12 +23,16 @@ contract between them is the binapi in `osvbng_cgnat.api`, chiefly
 plugin knows nothing about osvbng; any control plane that speaks
 the .api gets the same behavior.
 
-One dataplane decision worth restating here because a stale plan
-kept resurfacing: the session pool is a single shared pool that
-any worker translates against. A per-worker pool with frame-queue
-handoff was tried and reverted, because handoff cost dominates
-translate cost at BNG packet rates (plugin AUDIT.md, Finding #8).
-Do not plan work that assumes the per-worker model.
+What ships today is a single shared session pool that any worker
+translates against. A per-worker pool with frame-queue handoff was
+tried and reverted (plugin AUDIT.md, Finding #8), but that
+experiment handed off every packet and was measured at about one
+packet per second on QEMU, where the cost it found was KVM waking
+a descheduled vCPU. It did not price the pattern the plugin rules
+actually prescribe, and it says little about bare metal at high
+core count. Treat the shared pool as the current implementation,
+not as a settled architecture: the question and what would close
+it are in design/cgnat-worker-model.md.
 
 ## Control-plane component
 
