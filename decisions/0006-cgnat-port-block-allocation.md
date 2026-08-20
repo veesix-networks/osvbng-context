@@ -57,6 +57,29 @@ authoritative in memory, opdb retries, and HA marks degraded.
   than configured; sizing them from a deployment scale profile is
   future work, not shipped.
 
+## Conformance, checked 2026-08-20
+
+The decision stands; the implementation does not yet meet two parts
+of it, and a reader should not take either as working today.
+
+- **Allocator identity is not per-VRF in practice.** Activation,
+  release and bypass all pass VRF 0 to the allocator and to VPP,
+  and the plugin falls back to fib 0 when a table lookup misses.
+  So same-inside-IP-different-VRF subscribers collide in the Go
+  allocator rather than coexisting, and a subscriber in a non-zero
+  VRF takes a mapping miss on every packet. The first consequence
+  listed above is unavailable until the VRF is plumbed through.
+- **Deterministic mode does not pass traffic**, so it removes no
+  logging need. The Go path enables the feature on the session but
+  never programs a mapping, and the datapath has no derivation on
+  miss. Its two rig suites are in `skip-suites.txt`. Until it is
+  built or refused at validation, log-once compliance rests on the
+  block-granularity events alone.
+
+Both are queued in todo.md item 17 with the rest of the CGNAT
+audit. If either is judged not worth building, that is a new ADR
+superseding this one, not an edit here.
+
 ## Alternatives considered
 
 - out2in on the `ip4-unicast` feature arc of outside interfaces:
