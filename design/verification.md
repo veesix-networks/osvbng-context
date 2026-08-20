@@ -57,19 +57,24 @@ the hand-copied binaries.
 
 ## What this means for a session
 
-The suites run locally, and only locally. Workflow files for them
-exist under `.github/workflows/`, but they are not the
-verification path in practice: building the dataplane from
-scratch on a runner made every run too slow, so integration runs
-never went through CI and the maintainer runs suites on the dev
-machine. CI gates a pull request on build and unit tests only.
-Wiring the suites into CI is wanted and is blocked on the same
-artifact work: prebuilt version-stamped dataplane artifacts, so a
-runner assembles an image instead of compiling a dataplane.
+The suites run on the shared rig in three tiers, described in
+osvbng `docs/contributing/ci-and-review.md`. A pull request runs
+the core set listed in `tests/ci-suites.txt` (`integration.yml`),
+held behind a maintainer approval gate because it executes PR code
+on the rig. The full matrix runs nightly (`nightly.yml`) and
+before a release (`release-qualification.yml`). `skip-suites.txt`
+excludes suites from both CI and the local sweep, and asks for a
+reason per entry.
 
-So "verified" in a PR body can never mean "CI will catch it": run
-the suite covering the touched area locally before calling work
-done, and anything a subscriber touches runs against bngblaster.
+Two things follow. A green PR run covers the allowlist, not the
+catalog: read both files before assuming a suite ran, because a
+suite in neither list never runs at all. And the tiers do not
+change the dataplane-provenance problem above, which is what the
+artifact work in todo.md fixes.
+
+So "verified" still does not mean "CI will catch it": run the
+suite covering the touched area before calling work done, and
+anything a subscriber touches runs against bngblaster.
 Pick the suite by number from the catalog in the methodology doc,
 or add one when no suite covers the behavior. Report results
 exactly: which suite, pass or fail, what was not run, and which

@@ -14,10 +14,15 @@ File references are against the osvbng repo as of 2026-08.
 The `routing` component (`internal/routing/`) is the only place that
 executes `vtysh`. It has two faces:
 
-- Configuration: `ConfigureBGP` style calls plus
-  `Advertise/WithdrawBGPNetwork` and `Advertise/WithdrawSRGNetworks`
+- Configuration: only the runtime advertisement calls,
+  `Advertise/WithdrawBGPNetwork` and `Advertise/WithdrawSRGNetworks`,
   run `vtysh -c "configure terminal" -c ...`
-  (`internal/routing/component.go`).
+  (`internal/routing/component.go`). Declared config does not go
+  this way: conf handlers call `MarkFRRReloadNeeded`, and commit
+  renders `templates/frr/` and applies it through `frr-reload.py`
+  (`pkg/configmgr/conf.go`, `pkg/frr/reload.go`). Direct
+  `ConfigureBGP` style calls were removed so an instance change
+  survives an osvbngd restart.
 - Operational reads: `(c *Component) GetX(...)` wrappers run
   `c.execVtysh("-c", "show ... json")` and unmarshal into typed
   models. BGP and VRF getters live in `component.go`; OSPFv2 and

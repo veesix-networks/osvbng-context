@@ -10,10 +10,11 @@ NEXT UP (in order):
    artifacts: the hand-committed plugin binaries in
    osvbng/test-infra/vpp-plugins/ go away, because they let the rig
    silently verify against a stale dataplane
-   (design/verification.md). Same artifacts unblock running the
-   integration suites in CI at all: the workflows exist but were
-   never used because the runner built the dataplane from scratch
-   every time; with prebuilt debs a runner just assembles the image.
+   (design/verification.md). The suites now run in CI in three
+   tiers, so what is left here is provenance, not plumbing: a
+   runner still assembles an image around a hand-copied binary
+   drop, and version-stamped debs are what make a green run mean
+   the pair that shipped.
 2. Plugin imports: DONE. Nine plugins in osvbng-vpp with history
    (punt, pppoe, ipoe, l2gw, srg, tunnel, cgnat, qos_sched, l2tpv2);
    all compile and load together with zero node-resolution errors.
@@ -27,11 +28,16 @@ NEXT UP (in order):
    instead of punt for the rest. Removes the punt-storm surface and
    keeps answering across daemon restarts.
 4. gNMI operational-state read path on the daemon.
-5. Plugin suite rework toward generic UP building blocks. The old
-   cgnat plan here (per-worker pools plus handoff) is dead: it was
-   tried and reverted because handoff cost dominates at BNG packet
-   rates (osvbng-vpp cgnat AUDIT.md Finding #8). cgnat stays on the
-   shared session pool unless hot-worker benchmarks reopen it.
+5. Plugin suite rework toward generic UP building blocks. cgnat
+   runs on a shared session pool today, after per-worker pools
+   plus handoff were tried and reverted (osvbng-vpp cgnat AUDIT.md
+   Finding #8). Treat that as the current implementation, not a
+   settled architecture: the revert handed off every packet rather
+   than only RSS misses, and measured about one packet per second
+   on QEMU where the cost it found was KVM waking a descheduled
+   vCPU. Neither condition resembles bare metal at high core
+   count, which is where a shared writable cache line per
+   translated packet binds first.
 6. Multi-instance management design ADR: instances stay autonomous;
    a central controller as desired-state store and redundancy
    arbiter; identity crosses machines as role names only; bus and
@@ -69,7 +75,12 @@ NEXT UP (in order):
       worker delivery instead
     - DHCPv6 packet pipeline parses each packet three times
       through gopacket; single-parse rework, latency not
-      contention
+      contention. Two more in the same function, fix together:
+      internal/ipoe/dhcpv6.go spawns a goroutine per punted
+      packet, which rule 12 bans outright, and it copies the
+      packet and unwraps the relay before any subscriber-group
+      lookup, so a packet for an unconfigured VLAN pair pays both
+      before being dropped.
 12. NUMA-aware CPU placement on multi-socket hosts: resolution is
     topology-blind today, NUMA layouts are operator-expressed
     through explicit core sets (dataplane.cp-cores, workers). An
@@ -112,7 +123,9 @@ NEXT UP (in order):
     request, ResolveV6 already does this when the context carries
     no address), so PD-only subscribers stop burning pool
     addresses and the API stops showing an address with lease 0
-    the client never requested.
+    the client never requested. Suite 33 still defers its v6 ping
+    citing the RA-source reason that no longer applies: re-enable
+    it or restate the deferral.
 15. IPv6 first-class audit, 2026-08-17: gaps that survived the
     session in which the ip6-ll kernel-ND poisoning, the dead
     session re-attach and the punt policer burst division were
@@ -146,7 +159,10 @@ NEXT UP (in order):
       33's v6 skips cite osvbng-context#89, which resolves
       nowhere; the stated reason (global-source RAs) was fixed in
       May. Re-enable the deferred checks and add v6 forwarding
-      assertions where the matrix is v4-only.
+      assertions where the matrix is v4-only. Real-kernel v6
+      exists only in suite 32; suite 18's Linux client is still
+      v4-only and nothing asserts NUD recovery or LAN-side IA-PD
+      forwarding.
 16. CI hardening from the 2026-08-17 bring-up, two items with
     recorded evidence.
     - PR runs and the nightly share the rig concurrency group, and
@@ -172,3 +188,65 @@ NEXT UP (in order):
       its concurrency; topologies do not) or an unpinned worker
       mode in the dataplane. Until then the auto layout stands and
       suite 52 carries the residual sensitivity.
+17. CGNAT audit, 2026-08-20: a review of the plugin and the Go
+    component, every finding re-checked against the code before
+    landing here. Ranked; each item stands alone. The fixes belong
+    in osvbng-vpp and osvbng; the decisions at the end are this
+    repo's.
+    - Pool config can divide by zero: a subscriber-ratio wider
+      than the port range truncates block size to 0 and
+      ConfigurePool panics inside startup reconcile, which no
+      recover covers. One plausible value, crash loop every boot.
+      Reproduced against the real packages.
+    - The fragment-rewrite pool has no capacity check where the
+      session pool beside it has one, so a full fixed pool calls
+      os_out_of_memory and takes VPP with it. Records are one per
+      remote per subscriber against a 65536 ceiling, so ordinary
+      browsing reaches it at a few hundred subscribers.
+    - cgnat_pool_cascade_delete holds neither the session lock nor
+      the worker barrier while pool_put-ing sessions and mappings
+      and freeing per-mapping spinlocks; the other two delete
+      paths take the barrier. Reachable from a config edit that
+      drifts a pool and from reconcile's drop-orphan on every
+      osvbngd start, both with workers forwarding.
+    - Bypass installs a PRIORITY_HI drop entry that wins the FIB
+      against the subscriber's own /32, and never enables
+      cgnat-in2out, so the marker it installs can never be read.
+      A bypass subscriber gets a blackhole and nothing else. No
+      suite covers bypass.
+    - A reused port block commits without programming anything:
+      when GetOrAllocate returns isNew=false the component writes
+      its own maps, makes no VPP call, and carries the previous
+      session's sw_if_index, so the subscriber forwards
+      untranslated. No race required, and it is why several
+      teardown and restore paths blackhole.
+    - Nothing reconciles mappings. The dump call exists with no
+      caller, so a leaked mapping lives as long as the VPP
+      process rather than until the next restart.
+    - Subscriber-originated ICMP errors rewrite the inner
+      src_port where the comment above states dst_port, and the
+      out2in slowpath classifies an ICMP error from stale
+      reassembly metadata instead of the header, which is why a
+      subscriber traceroute gets no first hop.
+    - The port budget is smaller than the config implies: one
+      512-port block, a fresh port per 5-tuple and a hardcoded
+      120s reuse cooldown put sustainable new flows near one per
+      second, while max-sessions-per-subscriber defaults to 2000
+      and can never bind. Measure on the rig before any fast-path
+      work.
+    - Knobs that change nothing, rule 4: the ALG bitmask (five
+      ALGs on by default, no packet path reads it), the filtering
+      enum, max-blocks-per-subscriber, exhaustion-behavior,
+      ports-per-subscriber, the logging block, port_reuse_timeout.
+    - Decisions, none of them made. What NAT behavior osvbng
+      promises: it is symmetric today, and endpoint-independent
+      mapping gates EIF, hairpinning and PCP alike. How portless
+      protocols behave behind a shared outside IP, where ESP and
+      GRE collide across subscribers today. Whether deterministic
+      mode is built or refused, since it is advertised in config
+      and unimplemented end to end. What CGN traceability is
+      committed to, since the logging config is dead and
+      allocation records are Debug. ADR 0006 already promises
+      per-VRF allocator identity and leans on deterministic mode
+      for log-once compliance; both need the code or the ADR to
+      move.
