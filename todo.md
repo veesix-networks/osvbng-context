@@ -192,7 +192,10 @@ NEXT UP (in order):
     component, every finding re-checked against the code before
     landing here. Ranked; each item stands alone. The fixes belong
     in osvbng-vpp and osvbng; the decisions at the end are this
-    repo's.
+    repo's. The full record with evidence references and the
+    seventeen defects found during verification is
+    design/cgnat-audit-2026-08.md; the worker model it keeps
+    pointing at is design/cgnat-worker-model.md.
     - Pool config can divide by zero: a subscriber-ratio wider
       than the port range truncates block size to 0 and
       ConfigurePool panics inside startup reconcile, which no
