@@ -97,8 +97,8 @@ session as context.
    before the denylist work that builds on it.
 6. The mechanical deletion PR, with the corrected list below.
 7. Finish the L2TP surface the code already half-carries (section
-   "L2TP"): outbound StopCCN and CDN, the v3 reject, the denylist
-   feed, the LAC ppp-framing wire-up.
+   "L2TP"): outbound StopCCN and CDN, the denylist feed, the LAC
+   ppp-framing wire-up. The v3 reject is dropped (decision 9).
 8. The decisions at the end, each its own ADR or todo line.
 9. A deadcode ratchet in osvbng CI: `deadcode -test ./...` diffed
    against a committed baseline, fail when a PR adds a symbol, so
@@ -140,8 +140,9 @@ Items 1, 2, 4 (IPoE half) and 5 above. Smaller:
 
 - Deletion PR: remove `checkpointToMapping` from the list (it is the
   fix for item 2). `WithGARPCollector` reverses a recorded decision
-  (legacy HA_GARP_SPEC.md:75 kept it as a test seam); delete it only
-  with that line in the PR, or keep it. Also delete
+  (legacy HA_GARP_SPEC.md:75 kept it as a test seam); decision 13
+  below deletes it and this note is the record of the reversal. Also
+  delete
   `operations.Dataplane` (interface, not flagged because tools do not
   report unused interfaces); the legacy SOUTHBOUND_SDK_REFACTOR.md
   Phase 5 scheduled its removal and the audit calls it optional. The
@@ -156,13 +157,13 @@ Items 1, 2, 4 (IPoE half) and 5 above. Smaller:
 - "Decide" items already decided: the telemetry push path is in ADR
   0009's Decision section (keep unless a superseding ADR says
   otherwise); the VRF validator hook is a rejected alternative in ADR
-  0005 (delete); the GARP seam is kept by HA_GARP_SPEC (keep or
-  record the reversal). The PPPoE error tags are not an
-  RFC-completeness marker (see below); the gap is the absent
-  Service-Name policy, which no spec planned.
-- The only genuinely open questions: whether `pkg/` is a supported
-  out-of-tree SDK at all, and whether the telemetry push path stays.
-  Both are ADR material.
+  0005 (delete); the GARP seam was kept by HA_GARP_SPEC (reversed by
+  decision 13). The PPPoE error tags are not an RFC-completeness
+  marker (see below); the gap is the absent Service-Name policy,
+  which no spec planned.
+- The only genuinely open questions were whether `pkg/` is a
+  supported out-of-tree SDK at all, and whether the telemetry push
+  path stays. Both are decided below; the SDK answer becomes an ADR.
 
 ## Per-cluster verdicts
 
@@ -297,6 +298,127 @@ production-active path. Tier B is untouched.
   for.
 - The five QEMU upgrade scenarios were not run.
 
+## Decisions, 2026-08-21
+
+Made by the maintainer against the recommendations in this note.
+Each entry carries where to start and how it is verified, so a
+fresh session can take an item without the audit. Item numbers
+match the sign-off table.
+
+1. PPP short-Length guard: approved. Start at
+   `internal/ppp/dispatcher.go:99`: reject Length below 4 beside the
+   existing Length-above-payload check; unit test in
+   dispatcher_test.go with Length 0 to 3 and a valid frame.
+   Verification is the unit test and green suites; bngblaster cannot
+   craft the malformed frame.
+2. HA CGNAT decode: approved. Start at
+   `internal/cgnat/component.go:595`: `proto.Unmarshal` into
+   `hapb.CGNATMappingCheckpoint`, then `checkpointToMapping` from
+   pkg/ha (export it or move it). Verification on the HA rig: a
+   variant of suite 12 or 13 that keeps sessions established across
+   switchover and asserts the mapping is restored on the new active.
+3. logger.Sync: approved. Start at `cmd/osvbngd/main.go` after
+   `logger.Configure`: `defer logger.Sync()`. Verification: "osvbng
+   stopped" in the container log after a graceful stop.
+4. Service-group reversal at teardown: approved. Start in the
+   internal/pppoe and internal/ipoe teardown paths, before the VPP
+   interface call, using `svcgroup.ReverseFromSession` with the
+   resolved `svcgroup.ServiceGroup` the session was set up with
+   (carry it on the session; do not re-resolve from config, AAA can
+   supply `urpf`). Verification on the rig: a subscriber with urpf
+   strict disconnects, the next subscriber on the reused interface
+   with urpf off forwards traffic a strict check would drop.
+5. IPoE uRPF on index reuse: approved, two parts. Item 4's reversal
+   before delete covers osvbng. The urpf plugin's missing
+   `VNET_SW_INTERFACE_ADD_DEL` hook goes to fd.io gerrit per rule 9,
+   with the patch in the osvbng-vpp queue until it merges (ADR 0002).
+6. L2TP CDN result codes: approved. Start at
+   `pkg/l2tp/result_codes.go` with RFC 2661 section 4.4.2 open: add
+   busy=8 and shift the three that follow; fix `CDNString`; in
+   docs/configuration/l2tp.md:70 replace the trigger list with the
+   RFC names and mark the denylist block as not wired until item 10
+   lands. Unit test on the constants.
+7. Deletion PR: approved, one PR. The list is the 103 from
+   `deadcode -test ./...` at 4db1384 minus what other decisions keep:
+   `checkpointToMapping` (2), `logger.Sync` (3),
+   `ReverseFromSession` (4), `BuildStopCCN` and `BuildCDN` (8),
+   `ResolvePPPFramingLAC` (11), `Subscribe` and `SetTickInterval`
+   (12). Plus, from the 40 alive only by test: the pkg/ppp packet
+   parsers with their error types, `EchoHandler`,
+   `MakeLinkLocalAddress`, `ParseCompression`, `ParseMAC`,
+   `SignalGuard` with signal_test.go, `MessageTypeName`,
+   `DecodeUint32`, `BuildV3RejectStopCCN` (9), `SetUnboundedLabels`
+   (12), and `containsSub` collapsed to `strings.Contains`. Plus the
+   unflagged `operations.Dataplane` interface, and
+   `WithGARPCollector` with its type, field and nil branch (13).
+   Kept: the pkg/ppp option decoders, `DataplaneConf.Generate`,
+   `ReadStateFile`, `RecordingReporter`, `logger.NewTest`, the
+   allocator test helpers, `WithDecoder`, `appendResultCodeAVP`,
+   `DenylistForStopCCN`, `DenylistForCDN` and the ResultCode and
+   ErrorCode strings (10). Every orphaned test goes with its
+   function. Verification: compile, vet, unit tests, the three CI
+   tiers.
+8. Outbound StopCCN and CDN: approved, after items 1 to 7, under
+   todo.md item 7. Start at `internal/l2tp/dispatch.go:146-152`
+   (SCCRQ reject, result code 4), `lns.go:150-154` and
+   `lac.go:235-240` (challenge mismatch), `runner.go:135-138` (dead
+   channel), `component.go:190` (Stop), with RFC 2661 sections 6.4,
+   6.12 and 7.2.1 open; the builders are
+   `pkg/l2tp/messages.go:133,217`. Verification: the three suites the
+   legacy spec named and never got, lns_unknown_peer_reject,
+   lac_tunnel_auth_fail and a teardown case, against bngblaster.
+9. v3 graceful reject: rejected. RFC 2661 section 3.1 discards an
+   unknown Ver, and a v2-format StopCCN is unreadable to an RFC 3931
+   peer, so the reject does nothing on the wire. Delete
+   `BuildV3RejectStopCCN` in item 7, keep the drop and its counter,
+   and correct the comment at `internal/l2tp/dispatch.go:30-31`.
+   Legacy D13 is superseded by this entry.
+10. Denylist feed: approved, peer scope only. Where inbound StopCCN
+    and CDN are handled (`internal/l2tp/lns.go:253,261` today; the
+    LAC is the consumer at `lac.go:84`, so the LAC path must feed
+    it): parse the Result Code AVP, classify with
+    `DenylistForStopCCN` and `DenylistForCDN`, `denylist.Add` keyed
+    by peer IP with the `DenylistConfig` TTLs. Drop the
+    DenylistTunnel distinction (rule 1). Verification on the rig:
+    bngblaster as LNS returning a denylist result code, the LAC
+    skips that peer for the TTL.
+11. ppp-framing at the LAC: approved. Start at
+    `internal/l2tp/lac.go tryLACTunnel` beside
+    `lookupConfiguredSourceIP` (:465): resolve with
+    `ResolvePPPFramingLAC` and set `TunnelSpec.PPPHdrSkip`; drop the
+    hardcode at `aaa.go:54`. Verification: suite 31 with a per-LNS
+    override and a bngblaster LNS configured to match.
+12. Telemetry: keep the push path under ADR 0009 and keep
+    `WithDecoder` (legacy spec 59). `Subscribe` and `SetTickInterval`
+    enter the ratchet baseline with the reason "ADR 0009 push path,
+    consumer pending, todo item 4". Delete `SetUnboundedLabels`, its
+    test and TELEMETRY.md:94: it was never wired and
+    design/telemetry.md says the reject list must not be weakened.
+13. GARP collector seam: delete with item 7. Legacy
+    HA_GARP_SPEC.md:75 kept it as a test seam; no test uses it and
+    the session iterators replaced it. This entry records the
+    reversal.
+14. `pkg/` as an out-of-tree SDK: retire the claim by a short ADR
+    here. Go plugins are in-tree, compiled into osvbngd through blank
+    imports with no shared-object loading, so an external plugin
+    cannot exist without a fork; `pkg/` carries no external stability
+    promise. PLUGINS.md becomes the in-tree plugin guide (item 16)
+    and veesix-networks/osvbng-plugin-cookiecutter is archived.
+15. `auth.Get/List`, the paths wrappers with `pkg/paths.Path` and
+    `ShouldEncode`, the PPPoE error-tag builders, the DHCP relay
+    getters: delete with item 7. None has a plan or an RFC behind it;
+    Service-Name policy, if ever wanted, is a feature, not these
+    eight lines.
+16. Docs pass: approved, after item 14 for PLUGINS.md. The rest does
+    not wait: COMPONENTS.md:151, TELEMETRY.md:94 (12),
+    docs/configuration/l2tp.md:3-5 and :70 (6), the dispatch.go:30-31
+    comment (9), `avp_catalog.go:12` section number.
+17. deadcode ratchet: approved, right after item 7. In osvbng:
+    `scripts/deadcode-check.sh` runs `deadcode -test ./...` with
+    CGO_ENABLED=1 and diffs against a committed baseline; CI fails on
+    any addition; each baseline entry carries its reason on the same
+    line. The first baseline is what item 7 keeps.
+
 ## Sign-off
 
 An item is actioned only after a contributor sets it to approved
@@ -305,20 +427,20 @@ rejected, done. Landed is the PR that closed it.
 
 | # | Item | Kind | Status | Signed off | Landed |
 | - | - | - | - | - | - |
-| 1 | PPP dispatcher short-Length guard | fix, osvbng | proposed | - | - |
-| 2 | HA CGNAT checkpoint decode (proto, not JSON) | fix, osvbng | proposed | - | - |
-| 3 | logger.Sync at daemon shutdown | fix, osvbng | proposed | - | - |
-| 4 | Service-group reversal at teardown, PPPoE uRPF inheritance | fix, osvbng | proposed | - | - |
-| 5 | IPoE uRPF re-enable on sw_if_index reuse (urpf plugin cache), rig plus upstream | fix, osvbng-vpp or upstream | proposed | - | - |
-| 6 | L2TP CDN result codes and the l2tp.md:70 trigger list | fix, osvbng | proposed | - | - |
-| 7 | Mechanical deletion PR, list as corrected in this note | delete, osvbng | proposed | - | - |
-| 8 | L2TP outbound StopCCN and CDN send path | finish, osvbng | proposed | - | - |
-| 9 | L2TP v3 graceful reject at the dispatch stub | finish, osvbng | proposed | - | - |
-| 10 | L2TP denylist feed: parse the Result Code AVP, decide tunnel vs peer scope | finish, osvbng | proposed | - | - |
-| 11 | L2TP ppp-framing LAC wire-up in tryLACTunnel | finish, osvbng | proposed | - | - |
-| 12 | Telemetry push path: keep under ADR 0009 or supersede | decision, ADR | proposed | - | - |
-| 13 | GARP collector seam: keep per HA_GARP_SPEC or record the reversal | decision | proposed | - | - |
-| 14 | Is pkg/ an out-of-tree SDK: maintain it (CI compiles the cookiecutter) or retire the claim | decision, ADR | proposed | - | - |
-| 15 | auth.Get/List, paths wrappers, PPPoE error tags, DHCP relay getters: delete with item 7 unless objected here | decide | proposed | - | - |
-| 16 | Docs pass: PLUGINS.md stale symbols, COMPONENTS.md:151, TELEMETRY.md, l2tp.md:3-5, dispatch.go:30-31 comment | docs, osvbng | proposed | - | - |
-| 17 | deadcode ratchet in osvbng CI with a committed baseline | tooling, osvbng | proposed | - | - |
+| 1 | PPP dispatcher short-Length guard | fix, osvbng | approved | BSpendlove, 2026-08-21 | - |
+| 2 | HA CGNAT checkpoint decode (proto, not JSON) | fix, osvbng | approved | BSpendlove, 2026-08-21 | - |
+| 3 | logger.Sync at daemon shutdown | fix, osvbng | approved | BSpendlove, 2026-08-21 | - |
+| 4 | Service-group reversal at teardown, PPPoE uRPF inheritance | fix, osvbng | approved | BSpendlove, 2026-08-21 | - |
+| 5 | IPoE uRPF re-enable on sw_if_index reuse, item 4 plus an upstream urpf patch | fix, osvbng-vpp and upstream | approved | BSpendlove, 2026-08-21 | - |
+| 6 | L2TP CDN result codes and the l2tp.md:70 trigger list | fix, osvbng | approved | BSpendlove, 2026-08-21 | - |
+| 7 | Mechanical deletion PR, list as in decision 7 | delete, osvbng | approved | BSpendlove, 2026-08-21 | - |
+| 8 | L2TP outbound StopCCN and CDN send path | finish, osvbng | approved, after 1 to 7 | BSpendlove, 2026-08-21 | - |
+| 9 | L2TP v3 graceful reject at the dispatch stub | finish, osvbng | rejected, builder deleted in 7 | BSpendlove, 2026-08-21 | - |
+| 10 | L2TP denylist feed, peer scope | finish, osvbng | approved | BSpendlove, 2026-08-21 | - |
+| 11 | L2TP ppp-framing LAC wire-up in tryLACTunnel | finish, osvbng | approved | BSpendlove, 2026-08-21 | - |
+| 12 | Telemetry: push path and WithDecoder stay, SetUnboundedLabels goes | decision | approved | BSpendlove, 2026-08-21 | - |
+| 13 | GARP collector seam: deleted, HA_GARP_SPEC reversed here | decision | approved | BSpendlove, 2026-08-21 | - |
+| 14 | pkg/ is not an out-of-tree SDK: ADR, PLUGINS.md rewrite, archive the cookiecutter | decision, ADR | approved | BSpendlove, 2026-08-21 | - |
+| 15 | auth.Get/List, paths wrappers, PPPoE error tags, DHCP relay getters: delete with 7 | decision | approved | BSpendlove, 2026-08-21 | - |
+| 16 | Docs pass: PLUGINS.md after 14, COMPONENTS.md:151, TELEMETRY.md, l2tp.md, dispatch.go comment | docs, osvbng | approved | BSpendlove, 2026-08-21 | - |
+| 17 | deadcode ratchet in osvbng CI with a committed baseline | tooling, osvbng | approved, after 7 | BSpendlove, 2026-08-21 | - |
