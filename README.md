@@ -32,6 +32,7 @@ CLAUDE.md here before touching anything in the tree.
 | [0009](decisions/0009-telemetry-registry.md) | Typed telemetry registry as the only metrics path | Accepted |
 | [0010](decisions/0010-dataplane-gateway-responders-srg-convergence.md) | Gateway ARP and ND answered in the dataplane, SRG state convergent | Accepted |
 | [0011](decisions/0011-lcp-echo-offload.md) | LCP echo answered and generated in the osvbng_pppoe plugin | Accepted |
+| [0012](decisions/0012-go-plugins-in-tree-no-external-sdk.md) | Go plugins are in-tree, pkg/ is not an external SDK | Accepted |
 
 ## Design notes
 
