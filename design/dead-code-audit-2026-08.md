@@ -440,7 +440,7 @@ rejected, done. Landed is the PR that closed it.
 | 11 | L2TP ppp-framing LAC wire-up in tryLACTunnel | finish, osvbng | approved | BSpendlove, 2026-08-21 | osvbng#497 | - |
 | 12 | Telemetry: push path and WithDecoder stay, SetUnboundedLabels goes | decision | approved | BSpendlove, 2026-08-21 | osvbng#498 | - |
 | 13 | GARP collector seam: deleted, HA_GARP_SPEC reversed here | decision | approved | BSpendlove, 2026-08-21 | osvbng#499 | - |
-| 14 | pkg/ is not an out-of-tree SDK: ADR, PLUGINS.md rewrite, archive the cookiecutter | decision, ADR | approved | BSpendlove, 2026-08-21 | osvbng-context#27 | - |
+| 14 | pkg/ is not an out-of-tree SDK: ADR, PLUGINS.md rewrite, archive the cookiecutter | decision, ADR | approved | BSpendlove, 2026-08-21 | osvbng-context#27 | ADR 0012 (osvbng-context#29), cookiecutter#1 |
 | 15 | auth.Get/List, paths wrappers, PPPoE error tags, DHCP relay getters: delete with 7 | decision | approved | BSpendlove, 2026-08-21 | osvbng#500 | - |
 | 16 | Docs pass: PLUGINS.md after 14, COMPONENTS.md:151, TELEMETRY.md, l2tp.md, dispatch.go comment | docs, osvbng | approved | BSpendlove, 2026-08-21 | osvbng#501 | - |
 | 17 | deadcode ratchet in osvbng CI with a committed baseline | tooling, osvbng | approved, after 7 | BSpendlove, 2026-08-21 | osvbng#502 | - |
