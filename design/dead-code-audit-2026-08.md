@@ -425,22 +425,22 @@ An item is actioned only after a contributor sets it to approved
 here, by PR to this file. Status is one of proposed, approved,
 rejected, done. Landed is the PR that closed it.
 
-| # | Item | Kind | Status | Signed off | Landed |
-| - | - | - | - | - | - |
-| 1 | PPP dispatcher short-Length guard | fix, osvbng | approved | BSpendlove, 2026-08-21 | - |
-| 2 | HA CGNAT checkpoint decode (proto, not JSON) | fix, osvbng | approved | BSpendlove, 2026-08-21 | - |
-| 3 | logger.Sync at daemon shutdown | fix, osvbng | approved | BSpendlove, 2026-08-21 | - |
-| 4 | Service-group reversal at teardown, PPPoE uRPF inheritance | fix, osvbng | approved | BSpendlove, 2026-08-21 | - |
-| 5 | IPoE uRPF re-enable on sw_if_index reuse, item 4 plus an upstream urpf patch | fix, osvbng-vpp and upstream | approved | BSpendlove, 2026-08-21 | - |
-| 6 | L2TP CDN result codes and the l2tp.md:70 trigger list | fix, osvbng | approved | BSpendlove, 2026-08-21 | - |
-| 7 | Mechanical deletion PR, list as in decision 7 | delete, osvbng | approved | BSpendlove, 2026-08-21 | - |
-| 8 | L2TP outbound StopCCN and CDN send path | finish, osvbng | approved, after 1 to 7 | BSpendlove, 2026-08-21 | - |
-| 9 | L2TP v3 graceful reject at the dispatch stub | finish, osvbng | rejected, builder deleted in 7 | BSpendlove, 2026-08-21 | - |
-| 10 | L2TP denylist feed, peer scope | finish, osvbng | approved | BSpendlove, 2026-08-21 | - |
-| 11 | L2TP ppp-framing LAC wire-up in tryLACTunnel | finish, osvbng | approved | BSpendlove, 2026-08-21 | - |
-| 12 | Telemetry: push path and WithDecoder stay, SetUnboundedLabels goes | decision | approved | BSpendlove, 2026-08-21 | - |
-| 13 | GARP collector seam: deleted, HA_GARP_SPEC reversed here | decision | approved | BSpendlove, 2026-08-21 | - |
-| 14 | pkg/ is not an out-of-tree SDK: ADR, PLUGINS.md rewrite, archive the cookiecutter | decision, ADR | approved | BSpendlove, 2026-08-21 | - |
-| 15 | auth.Get/List, paths wrappers, PPPoE error tags, DHCP relay getters: delete with 7 | decision | approved | BSpendlove, 2026-08-21 | - |
-| 16 | Docs pass: PLUGINS.md after 14, COMPONENTS.md:151, TELEMETRY.md, l2tp.md, dispatch.go comment | docs, osvbng | approved | BSpendlove, 2026-08-21 | - |
-| 17 | deadcode ratchet in osvbng CI with a committed baseline | tooling, osvbng | approved, after 7 | BSpendlove, 2026-08-21 | - |
+| # | Item | Kind | Status | Signed off | Issue | Landed |
+| - | - | - | - | - | - | - |
+| 1 | PPP dispatcher short-Length guard | fix, osvbng | approved | BSpendlove, 2026-08-21 | osvbng#488 | - |
+| 2 | HA CGNAT checkpoint decode (proto, not JSON) | fix, osvbng | approved | BSpendlove, 2026-08-21 | osvbng#489 | - |
+| 3 | logger.Sync at daemon shutdown | fix, osvbng | approved | BSpendlove, 2026-08-21 | osvbng#490 | - |
+| 4 | Service-group reversal at teardown, PPPoE uRPF inheritance | fix, osvbng | approved | BSpendlove, 2026-08-21 | osvbng#491 | - |
+| 5 | IPoE uRPF re-enable on sw_if_index reuse, item 4 plus an upstream urpf patch | fix, osvbng-vpp and upstream | approved | BSpendlove, 2026-08-21 | osvbng-vpp#30 | - |
+| 6 | L2TP CDN result codes and the l2tp.md:70 trigger list | fix, osvbng | approved | BSpendlove, 2026-08-21 | osvbng#492 | - |
+| 7 | Mechanical deletion PR, list as in decision 7 | delete, osvbng | approved | BSpendlove, 2026-08-21 | osvbng#493 | - |
+| 8 | L2TP outbound StopCCN and CDN send path | finish, osvbng | approved, after 1 to 7 | BSpendlove, 2026-08-21 | osvbng#494 | - |
+| 9 | L2TP v3 graceful reject at the dispatch stub | finish, osvbng | rejected, builder deleted in 7 | BSpendlove, 2026-08-21 | osvbng#495 | - |
+| 10 | L2TP denylist feed, peer scope | finish, osvbng | approved | BSpendlove, 2026-08-21 | osvbng#496 | - |
+| 11 | L2TP ppp-framing LAC wire-up in tryLACTunnel | finish, osvbng | approved | BSpendlove, 2026-08-21 | osvbng#497 | - |
+| 12 | Telemetry: push path and WithDecoder stay, SetUnboundedLabels goes | decision | approved | BSpendlove, 2026-08-21 | osvbng#498 | - |
+| 13 | GARP collector seam: deleted, HA_GARP_SPEC reversed here | decision | approved | BSpendlove, 2026-08-21 | osvbng#499 | - |
+| 14 | pkg/ is not an out-of-tree SDK: ADR, PLUGINS.md rewrite, archive the cookiecutter | decision, ADR | approved | BSpendlove, 2026-08-21 | osvbng-context#27 | - |
+| 15 | auth.Get/List, paths wrappers, PPPoE error tags, DHCP relay getters: delete with 7 | decision | approved | BSpendlove, 2026-08-21 | osvbng#500 | - |
+| 16 | Docs pass: PLUGINS.md after 14, COMPONENTS.md:151, TELEMETRY.md, l2tp.md, dispatch.go comment | docs, osvbng | approved | BSpendlove, 2026-08-21 | osvbng#501 | - |
+| 17 | deadcode ratchet in osvbng CI with a committed baseline | tooling, osvbng | approved, after 7 | BSpendlove, 2026-08-21 | osvbng#502 | - |

@@ -258,8 +258,9 @@ NEXT UP (in order):
     this repo before landing. The full record, corrected action
     plan and the sign-off table are design/dead-code-audit-2026-08.md;
     all 17 items were decided there on 2026-08-21 and each carries
-    where to start and how it is verified. Ranked; the first three
-    are small.
+    where to start and how it is verified, with one issue per item
+    (osvbng#488 to #502, osvbng-vpp#30, osvbng-context#27). Ranked;
+    the first three are small.
     - PPP dispatcher panics on a frame whose declared Length is 0
       to 3: both guards pass and payload[4:length] slices out of
       range, no recover on the path, reachable from a punted
