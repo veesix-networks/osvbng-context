@@ -253,3 +253,43 @@ NEXT UP (in order):
       per-VRF allocator identity and leans on deterministic mode
       for log-once compliance; both need the code or the ADR to
       move.
+18. Dead code audit, 2026-08-18: 143 functions flagged by deadcode
+    at osvbng 4db1384, every claim re-checked against the code and
+    this repo before landing. The full record, corrected action
+    plan and the sign-off table are design/dead-code-audit-2026-08.md;
+    all 17 items were decided there on 2026-08-21 and each carries
+    where to start and how it is verified. Ranked; the first three
+    are small.
+    - PPP dispatcher panics on a frame whose declared Length is 0
+      to 3: both guards pass and payload[4:length] slices out of
+      range, no recover on the path, reachable from a punted
+      subscriber frame. One condition.
+    - HA CGNAT mapping restore never works: the receiver stores
+      protobuf, the cgnat component decodes JSON, so every restore
+      returns false. The decode helper the audit marks dead is the
+      fix.
+    - logger.Sync is never called, so the diode buffer's last poll
+      interval is lost on every exit and "osvbng stopped" rarely
+      reaches stdout.
+    - Service-group state is never reversed at teardown: PPPoE
+      parks its interface so the next subscriber inherits uRPF;
+      IPoE deletes it but the urpf plugin's per-index cache skips
+      re-enable on reuse. ACLs cannot leak yet (registry never
+      populated). Fix in component teardown per ADR 0003, not in
+      releaseSession.
+    - L2TP CDN result codes are off by one against RFC 2661
+      section 4.4.2, and the documented denylist triggers disagree
+      with the code and the legacy spec.
+    - One deletion PR for the 103 dead symbols with three
+      corrections (keep checkpointToMapping, decide
+      WithGARPCollector against HA_GARP_SPEC, also drop the
+      operations.Dataplane interface), then a deadcode ratchet in
+      CI so residue is removed in the PR that introduces it.
+    - L2TP half-built surface the legacy spec mandated and the
+      code still carries: outbound StopCCN and CDN (RFC 2661
+      section 7.2.1 MUST), the v3 reject stub, the denylist feed,
+      the LAC ppp-framing no-op.
+    - Decisions: telemetry push path stays under ADR 0009 unless
+      superseded; whether pkg/ is a supported out-of-tree SDK at
+      all, since PLUGINS.md is 15 symbols stale and the
+      cookiecutter has not compiled since June.

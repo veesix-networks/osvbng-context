@@ -51,6 +51,7 @@ CLAUDE.md here before touching anything in the tree.
 | [cgnat-architecture](design/cgnat-architecture.md) | CGNAT control/dataplane split, lifecycle, persistence and HA |
 | [cgnat-worker-model](design/cgnat-worker-model.md) | How CGNAT should distribute across workers: nat44-ed prior art, the candidate, the test plan |
 | [cgnat-audit-2026-08](design/cgnat-audit-2026-08.md) | Verified findings of the August 2026 CGNAT audit, ranked, with the fix order |
+| [dead-code-audit-2026-08](design/dead-code-audit-2026-08.md) | Verified findings of the August 2026 dead code audit, the defects it surfaced, and the sign-off table gating each action |
 | [l2tp-architecture](design/l2tp-architecture.md) | L2TPv2 LAC and LNS: control-plane layout and the dataplane seam |
 | [pppoe-architecture](design/pppoe-architecture.md) | PPPoE termination: discovery, PPP machinery, echo at scale, HA replay |
 | [verification](design/verification.md) | How changes are verified: the local containerlab and bngblaster suites |
