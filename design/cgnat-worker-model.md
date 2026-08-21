@@ -123,18 +123,29 @@ each at 16, which is unworkable. Subscriber affinity keeps the block
 and its allocator private to one worker, so the allocator needs no
 lock at all.
 
-**Return traffic on another NIC or CPU.** Two separate problems.
-Which worker is solved by the flow hash for existing flows and by
-port arithmetic for new inbound ones. Which socket is the part
-nat44-ed ignores and osvbng can fix, because osvbng owns the
-routing: give each socket its own outside addresses and advertise
-them only through that socket's core NIC. Return traffic for a
-socket-0 subscriber then arrives on socket 0 by construction, and
-every handoff is intra-socket, where the frame queue and the
-session line share L3. If both sockets advertise the same pool, the
-upstream router ECMPs return traffic across them and half of it
-crosses UPI. That is a BGP policy decision, not dataplane code, and
-it is the most valuable single element of the design.
+**Return traffic on another NIC or CPU.** Which worker is solved
+by the flow hash for existing flows and by port arithmetic for new
+inbound ones. Which socket is not something the design gets to
+choose. The core side is a LAG or ECMP toward a pair of routers,
+and return flows land on whichever member the upstream hash picks;
+nothing in the box controls that, and routing policy that pinned
+outside prefixes to one NIC would couple the network to the
+server's PCIe layout and break the moment that NIC failed. So the
+design must be correct and bounded when a return packet arrives on
+the other socket from the access NIC it must leave on.
+
+It is, and the bound is one crossing. That packet has to cross UPI
+once regardless of NAT design, because it must leave on the other
+socket; the handoff model only decides where. Handoff to the owner
+is one frame-queue enqueue and one remote buffer read, after which
+the translate and the TX are both local to the access NIC. The
+shared-pool design crosses twice on the same packet, once for the
+session line and once for the TX from a remote worker. What the
+box does control is everything else: workers pinned per socket,
+each NIC's rx queues on its own socket, buffers per NUMA node, and
+the owner chosen from the access NIC's socket so the outbound
+direction never crosses at all. The cross-socket handoff is then a
+cost to measure, test 3 below, not a thing to design around.
 
 **Elephant flows.** A flow cannot be split across workers without
 reordering; VPP's unit is the RX queue. But one worker's capacity,
@@ -193,8 +204,8 @@ belongs to an existing flow and resolves through the flow hash. The
 Go allocator and the authority chain in ADR 0006 are untouched.
 
 Phase 2, with endpoint-independent mapping and filtering: per-
-worker port slices so a first inbound packet steers by arithmetic,
-and per-socket outside-address advertisement. Here the Go allocator
+worker port slices so a first inbound packet steers by arithmetic
+without a lookup. Here the Go allocator
 must learn the worker count to carve a subscriber's block inside
 the owner's slice, or the dataplane allocates inside the slice and
 Go records it. Either is an amendment to ADR 0006, and an SRG pair
@@ -222,9 +233,11 @@ running:
    5-tuple and cannot know the owner function. The number that
    decides the design is the per-packet cost of a handoff to a hot
    worker.
-3. Wrong NUMA layout on purpose, core NIC on the other socket,
-   against the right one, with uncore or `pcm-numa` counters. This
-   prices the per-socket advertisement decision.
+3. Return traffic forced onto the other socket, by steering the
+   core-side generator at the far NIC, against return traffic on
+   the local one, with uncore or `pcm-numa` counters. This prices
+   the one crossing per return packet that a LAG'd core side will
+   produce for about half of all flows.
 4. Churn at 1000 sessions per second up and down during test 2.
    Prices mapping programming by interrupt against today's
    barrier.
@@ -239,8 +252,6 @@ running:
 
 ## Open decisions
 
-- Per-socket outside sub-prefixes, which need BGP policy per NIC
-  pair, against accepting cross-socket handoff and measuring it.
 - Phase 2 block allocation: Go learning the worker count, or the
   dataplane allocating inside the slice with Go recording it.
 - Hardware. Every measurement above needs a dual-socket box with
