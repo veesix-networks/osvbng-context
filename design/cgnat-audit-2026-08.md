@@ -208,7 +208,11 @@ promises `(inside_vrf_id, inside_ip)` identity. The `ENTRY_NEEDS_
 REFRESH` sub-claim is harmless and dropped. The PPPoE VRF ceiling
 (`osvbng_pppoe.c:294-302`, a fib index compared to a next-node
 count) is real, independent, and already blocks multi-VRF PPPoE.
-Critical for multi-VRF, no effect single-VRF.
+Critical for multi-VRF, no effect single-VRF. Landed: osvbng#505
+(Go side, plus the DHCP lease key, resolved pool name and interface
+address index that were address-only one layer up, and suite
+53-cgnat-vrf), osvbng-vpp#32 (plugin fallbacks), osvbng-vpp#33
+(PPPoE ceiling).
 
 **B3, deterministic mode never programs a mapping. Holds.** The Go
 det path calls only `CGNATEnableOnSession`; the derivation lives

@@ -62,13 +62,19 @@ authoritative in memory, opdb retries, and HA marks degraded.
 The decision stands; the implementation does not yet meet two parts
 of it, and a reader should not take either as working today.
 
-- **Allocator identity is not per-VRF in practice.** Activation,
-  release and bypass all pass VRF 0 to the allocator and to VPP,
-  and the plugin falls back to fib 0 when a table lookup misses.
-  So same-inside-IP-different-VRF subscribers collide in the Go
-  allocator rather than coexisting, and a subscriber in a non-zero
-  VRF takes a mapping miss on every packet. The first consequence
-  listed above is unavailable until the VRF is plumbed through.
+- **Allocator identity is per-VRF since osvbng#505 and
+  osvbng-vpp#32.** Before those, activation, release and bypass
+  passed VRF 0 to the allocator and to VPP, and the plugin fell
+  back to fib 0 when a table lookup missed, so subscribers with the
+  same inside IP in different VRFs collided in the Go allocator and
+  a subscriber in a non-zero VRF took a mapping miss on every
+  packet. Now the session's VRF keys every allocator and southbound
+  call and a table miss is an API error. The first consequence
+  listed above is exercised by suite 53-cgnat-vrf, two customer
+  VRFs sharing one inside prefix and one outside pool. Reaching it
+  also took three address-only identities one layer up (the DHCP
+  lease key, the resolved pool name, the interface address index),
+  fixed in the same PR.
 - **Deterministic mode does not pass traffic**, so it removes no
   logging need. The Go path enables the feature on the session but
   never programs a mapping, and the datapath has no derivation on
@@ -76,9 +82,9 @@ of it, and a reader should not take either as working today.
   built or refused at validation, log-once compliance rests on the
   block-granularity events alone.
 
-Both are queued in todo.md item 17 with the rest of the CGNAT
-audit. If either is judged not worth building, that is a new ADR
-superseding this one, not an edit here.
+The deterministic gap is queued in todo.md item 17 with the rest of
+the CGNAT audit. If it is judged not worth building, that is a new
+ADR superseding this one, not an edit here.
 
 ## Alternatives considered
 
