@@ -222,7 +222,8 @@ NEXT UP (in order):
       its own maps, makes no VPP call, and carries the previous
       session's sw_if_index, so the subscriber forwards
       untranslated. No race required, and it is why several
-      teardown and restore paths blackhole.
+      teardown and restore paths blackhole. Landed in osvbng#505
+      with the PPPoE Released payload.
     - Nothing reconciles mappings. The dump call exists with no
       caller, so a leaked mapping lives as long as the VPP
       process rather than until the next restart.
@@ -249,10 +250,10 @@ NEXT UP (in order):
       mode is built or refused, since it is advertised in config
       and unimplemented end to end. What CGN traceability is
       committed to, since the logging config is dead and
-      allocation records are Debug. ADR 0006 already promises
-      per-VRF allocator identity and leans on deterministic mode
-      for log-once compliance; both need the code or the ADR to
-      move.
+      allocation records are Debug. ADR 0006 leans on deterministic
+      mode for log-once compliance and needs the code or the ADR to
+      move; its per-VRF allocator identity landed in osvbng#505 and
+      osvbng-vpp#32.
 18. Dead code audit, 2026-08-18: 143 functions flagged by deadcode
     at osvbng 4db1384, every claim re-checked against the code and
     this repo before landing. The full record, corrected action
