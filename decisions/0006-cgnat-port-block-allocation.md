@@ -73,8 +73,10 @@ of it, and a reader should not take either as working today.
   listed above is exercised by suite 53-cgnat-vrf, two customer
   VRFs sharing one inside prefix and one outside pool. Reaching it
   also took three address-only identities one layer up (the DHCP
-  lease key, the resolved pool name, the interface address index),
-  fixed in the same PR.
+  lease key, the resolved pool name, the interface address index)
+  and a VRF's VPP tables existing for both families whatever it
+  declares, without which an IPv4-only VRF's loopback cannot be an
+  unnumbered source; all fixed in the same PR.
 - **Deterministic mode does not pass traffic**, so it removes no
   logging need. The Go path enables the feature on the session but
   never programs a mapping, and the datapath has no derivation on

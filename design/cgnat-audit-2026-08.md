@@ -210,9 +210,10 @@ REFRESH` sub-claim is harmless and dropped. The PPPoE VRF ceiling
 count) is real, independent, and already blocks multi-VRF PPPoE.
 Critical for multi-VRF, no effect single-VRF. Landed: osvbng#505
 (Go side, plus the DHCP lease key, resolved pool name and interface
-address index that were address-only one layer up, and suite
-53-cgnat-vrf), osvbng-vpp#32 (plugin fallbacks), osvbng-vpp#33
-(PPPoE ceiling).
+address index that were address-only one layer up, both VPP tables
+for every VRF so an IPv4-only VRF's loopback takes unnumbered
+sessions, and suite 53-cgnat-vrf), osvbng-vpp#32 (plugin
+fallbacks), osvbng-vpp#33 (PPPoE ceiling).
 
 **B3, deterministic mode never programs a mapping. Holds.** The Go
 det path calls only `CGNATEnableOnSession`; the derivation lives
