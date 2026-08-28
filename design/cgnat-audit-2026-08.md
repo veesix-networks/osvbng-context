@@ -50,7 +50,7 @@ and independent.
 6. Populate the PPPoE Released payload, and make the reused-block
    path program the dataplane. Without the second half the leak
    stops but the next subscriber on that address forwards
-   untranslated.
+   untranslated. Landed: osvbng#505, both halves.
 7. Decide what bypass is, then rebuild it. Today it installs a drop
    route that wins the FIB and enables nothing.
 8. Measure the port budget on the rig before any fast-path work.
@@ -199,7 +199,11 @@ PADT, LCP dead peer and admin clear all leak; only the post-VPP-
 failure path publishes a full event. IPoE populates two of the
 three, not `ServiceGroup`. The inheritance of the outside identity
 is not caused by registry ordering but by the reused-block path
-above. "Leak forever" is "leak until restart". Critical.
+above. "Leak forever" is "leak until restart". Critical. Landed:
+osvbng#505 populates the PPPoE Released payload (address, VRF,
+service group) and programs the dataplane on a reused block; suite
+53-cgnat-vrf releases PPPoE sessions in a VRF through PADT and
+asserts no mapping survives.
 
 **B2, inside VRF hardcoded to 0. Holds.** Every cited line passes
 VRF 0 while `sess.VRF` is live in the same function, and the plugin

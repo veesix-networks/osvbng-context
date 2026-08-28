@@ -222,7 +222,8 @@ NEXT UP (in order):
       its own maps, makes no VPP call, and carries the previous
       session's sw_if_index, so the subscriber forwards
       untranslated. No race required, and it is why several
-      teardown and restore paths blackhole.
+      teardown and restore paths blackhole. Landed in osvbng#505
+      with the PPPoE Released payload.
     - Nothing reconciles mappings. The dump call exists with no
       caller, so a leaked mapping lives as long as the VPP
       process rather than until the next restart.
