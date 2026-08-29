@@ -30,7 +30,9 @@ and independent.
    `subscriber-ratio: 65535` on the default range, or a 1024-port
    range with ratio 2000, gives block size 0 and `ConfigurePool`
    panics inside startup reconcile with no `recover()` on the start
-   path. One plausible value, crash loop on every boot.
+   path. One plausible value, crash loop on every boot. Landed:
+   osvbng#509, with the six other gaps in the same validation pass
+   and the /16 bound on outside prefixes.
 2. Bound the fragment-rewrite pool. `cgnat_frag_rewrite_acquire`
    calls `pool_get_zero` on a fixed 65536-entry pool with no
    capacity check; VPP aborts the process when a fixed pool is
@@ -44,9 +46,14 @@ and independent.
    start.
 4. Read the ICMP type from the header in the out2in slowpath, and
    restore the `ip.reass.ip_proto` fail-closed check there. This
-   closes the first-hop traceroute report.
+   closes the first-hop traceroute report. Landed: osvbng-vpp#35.
+   out2in now classifies entirely from the packet, so no metadata
+   is read and the cross-check has nothing left to validate; the
+   comment records why rather than restoring the check.
 5. Fix the inner field in the in2out ICMP-error rewrite:
    `->src_port` to `->dst_port` at `osvbng_cgnat_in2out.c:469`.
+   Landed: osvbng-vpp#35, with the quoted UDP checksum in both
+   directions and the branch order corrected.
 6. Populate the PPPoE Released payload, and make the reused-block
    path program the dataplane. Without the second half the leak
    stops but the next subscriber on that address forwards
@@ -245,7 +252,17 @@ The translate path falls through to `ip4-lookup` rather than
 the constraint block names neither `tcp-mss-clamping-ip4-in` nor
 anything that chains to it. The order is a solver tie broken by
 load order. Two lines. High if misordered; verify with
-`show ip feature`.
+`show ip feature`. Landed: osvbng-vpp#35. Both translate paths, the
+ICMP-error path and the fragment path leave through
+`vnet_feature_next`, the slow node became a sibling so the arc's
+next index is valid there, and the arc position is pinned after
+sv-reass, uRPF and the clamp. Suite 10 reads the order back and
+asserts a translated SYN carries the clamped MSS; before the fix the
+arc read sv-reass, cgnat-in2out, clamp and the SYN left at 1024.
+This is what exposed osvbng#510: the old jump to `ip4-lookup` also
+skipped `ip4-not-enabled`, so PPPoE sessions restored onto a
+promoted node were forwarding off an interface with no IPv4
+enabled.
 
 **B6, hairpinning drops with a misleading counter. Holds, and the
 plugin's SUMMARY.md is wrong.** The exclusive DPO catches the
@@ -260,7 +277,11 @@ counter is never incremented. Medium-high.
 correct for its direction. Adjacent: the inner UDP checksum is not
 updated in either direction, and in2out tests the ICMP-error branch
 before the fragment branch where out2in orders them correctly.
-High, one token.
+High, one token. Landed: osvbng-vpp#35, including both adjacent
+items. Suite 54 asserts the quoted header reaching the remote
+carries the outside address and port in its destination fields with
+the remote's own port untouched; before the fix it read
+inner_sport=<outside port>, inner_dport=<inside port>.
 
 **B8, bypass entries are PRIORITY_HI drop routes. Holds, raised to
 Critical, settled from the VPP FIB source.** `cgnat-bypass`,
@@ -344,7 +365,14 @@ self-generated Time Exceeded lands back in the inside FIB, reaches
 out2in.c:355-358` from the stale `reass.icmp_type_or_tcp_flags`
 field. The comment claiming `flow_hash` aliases `reass.ip_proto` is
 wrong; only the L4 port fields are aliased, so the fail-closed
-check is available. Two lines.
+check is available. Two lines. Landed: osvbng-vpp#35, by removing
+the metadata read rather than adding the check: `ip4-icmp-error`
+copies the offending packet's buffer including its opaque, so a
+self-generated error carries the probe's `ip_proto` too and the
+cross-check would have dropped it. Suite 54 covers both probe
+shapes; before the fix hop 1 was `*` while hop 2 answered, because
+the remote's own error is genuinely received and its metadata is
+correct.
 
 ## D. Control-plane races
 
