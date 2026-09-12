@@ -33,6 +33,7 @@ CLAUDE.md here before touching anything in the tree.
 | [0010](decisions/0010-dataplane-gateway-responders-srg-convergence.md) | Gateway ARP and ND answered in the dataplane, SRG state convergent | Accepted |
 | [0011](decisions/0011-lcp-echo-offload.md) | LCP echo answered and generated in the osvbng_pppoe plugin | Accepted |
 | [0012](decisions/0012-go-plugins-in-tree-no-external-sdk.md) | Go plugins are in-tree, pkg/ is not an external SDK | Accepted |
+| [0013](decisions/0013-cgnat-lifecycle-single-writer-per-subscriber-key.md) | CGNAT session lifecycle runs through one writer per subscriber key | Accepted |
 
 ## Design notes
 

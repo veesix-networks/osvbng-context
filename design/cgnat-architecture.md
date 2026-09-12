@@ -50,6 +50,17 @@ group's CGNAT policy (`Policy` names a pool, `Bypass` skips NAT):
 - Deterministic: mapping is computed, not allocated; the
   dataplane can derive it from config alone.
 
+Events do not program the dataplane directly. Each subscriber key
+(inside VRF, inside IP) has one writer in lifecycle.go: an event
+records which session should hold the key, and the writer converges
+what is programmed toward that with one dataplane call in flight per
+key, re-evaluating from the callback. A release only clears the key
+when the releasing session holds it, so a sticky-lease handover (old
+session releasing while the new one activates on the same address)
+keeps the block, refreshes it onto the new interface and re-keys the
+opdb record; the block is freed only from the delete callback on
+success. ADR 0013 records the decision and the failure it closes.
+
 Supporting managers: `BypassManager`, `BlacklistManager`
 (per-pool exclusion of outside addresses), and a `ReverseIndex`
 for outside-to-subscriber lookups. Config-apply validates overlap
