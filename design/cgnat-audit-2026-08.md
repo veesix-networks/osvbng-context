@@ -382,7 +382,14 @@ bus.go:112-114`), activate and release arrive on different topics,
 and release is keyed by inside IP. But PPPoE's release never runs
 (B1), so the live path is IPoE with a sticky DHCP lease.
 `GetOrAllocate` also returns the dead session's `SwIfIndex`.
-Critical.
+Critical. Landed: osvbng#513, ADR 0013. One writer per allocator
+key; a release clears the key only when the releasing session
+holds it, and a handed-over block is refreshed onto the new
+interface and re-keyed in opdb. The rig cannot show the ordering:
+on the live IPoE path the DHCP release is published before the
+rediscover is processed, so 125 back-to-back flaps left main
+consistent too. The interleavings are pinned by unit tests that
+park every dataplane callback.
 
 **D2, in-flight windows. Three of four hold.** A release during the
 async add window early-exits and the callback then commits for a
@@ -390,7 +397,13 @@ dead session, which nothing reaps. The 64-worker pool has no per-
 key serialisation; the reorder hazard is the same-inside-IP flap,
 not another subscriber's block, because deletes are keyed on inside
 IP. A failed delete frees the block locally anyway. `drainQueue`
-flips before replaying; boot window only. High.
+flips before replaying; boot window only. High. Landed: osvbng#513
+for the first three. A release during the add window now leaves
+the add to complete and tears the mapping down from its callback;
+one call in flight per key makes the transport's order moot; the
+block is freed only from the delete callback on success and a
+failed delete keeps block and record for the next holder to
+refresh. The `drainQueue` window stands.
 
 **D3, storms. Holds in part.** Bus drop past 10000 with a per-event
 warn, goroutine fan-out against rule 12, an unsampled error per
@@ -428,7 +441,13 @@ The preserved-for-retry path re-adds blocks without a
 `sessionPoolMap` entry and nothing retries; when that session
 activates, the reused-block path marks it live without programming
 VPP, a silent blackhole on a plain restart. The earlier triage
-verdict that only rig coverage remained is withdrawn.
+verdict that only rig coverage remained is withdrawn. Landed for
+the preserved-for-retry path: osvbng#513. The preserved block has
+no holder; the session's restored event programs it and the
+session's release deletes it through the normal path, which the
+plugin accepts for a missing entry. `populateLocalState`, the
+`on_divergence: fail` naming and `RecoverDataplane` running beside
+live handlers stand.
 
 ## E. Fast path
 
