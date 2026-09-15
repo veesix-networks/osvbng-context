@@ -100,7 +100,9 @@ NEXT UP (in order):
       deployments carry no BNG session machinery
     - admission serialized per subscriber key, so one
       misbehaving subscriber's churn cannot reorder or starve
-      another's session setup
+      another's session setup. CGNAT has its instance (ADR 0013,
+      one writer per allocator key); session setup does not yet
+      have one
     - punt-storm dampening per subscriber key ahead of the
       protocol components, complementing the in-node punt
       policer's aggregate cap
